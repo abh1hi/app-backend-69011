@@ -31,6 +31,11 @@
       <div v-if="error" class="error-state">
         <p>{{ error }}</p>
       </div>
+      
+      <!-- Load More Button -->
+      <div v-if="hasMore && !loading" class="load-more-container">
+        <button @click="loadMore" class="load-more-button">Load More</button>
+      </div>
     </div>
   </div>
 </template>
@@ -46,25 +51,19 @@ const user = ref<User | null>(null);
 const router = useRouter();
 const auth = getAuth();
 
-// Create a ref for the ownerId that will be passed to the composable.
 const ownerId = ref<string | null>(null);
 
-// Call the composable immediately and synchronously.
-// It will not fetch data until ownerId has a value.
-const { documents, loading, error } = useInfiniteScroll('properties', { ownerId });
+// Get all the reactive properties from the composable
+const { documents, loading, error, hasMore, loadMoreDocuments } = useInfiniteScroll('properties', { ownerId });
 
 let unsubscribe: (() => void) | null = null;
 
 onMounted(() => {
-  // Listen for authentication state changes.
   unsubscribe = onAuthStateChanged(auth, (currentUser) => {
     if (currentUser) {
       user.value = currentUser;
-      // When the user is logged in, update the ownerId.
-      // The watcher in the composable will trigger the data fetch.
       ownerId.value = currentUser.uid;
     } else {
-      // If there is no user, reset the user and ownerId, and redirect.
       user.value = null;
       ownerId.value = null;
       router.push('/login');
@@ -73,7 +72,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  // Clean up the auth state listener.
   if (unsubscribe) {
     unsubscribe();
   }
@@ -81,7 +79,10 @@ onUnmounted(() => {
 
 const handleLogout = async () => {
   await signOut(auth);
-  // The onAuthStateChanged listener will handle the redirect.
+};
+
+const loadMore = () => {
+  loadMoreDocuments();
 };
 </script>
 
@@ -144,6 +145,20 @@ const handleLogout = async () => {
     height: 30px;
     animation: spin 1s linear infinite;
     margin: 0 auto;
+}
+
+.load-more-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.load-more-button {
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 @keyframes spin {

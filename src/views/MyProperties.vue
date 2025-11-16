@@ -1,59 +1,57 @@
 <template>
   <div class="my-properties-container">
     <h2 class="section-title">My Properties</h2>
-    <div v-if="isLoading" class="loading-state">
+    <div v-if="loading && documents.length === 0" class="loading-state">
       <div class="spinner"></div>
       <p>Loading my properties...</p>
     </div>
     <div v-if="error" class="error-state">
        <p>{{ error }}</p>
     </div>
-    <div v-if="!isLoading && !error" class="properties-grid">
+    <div v-if="!error" class="properties-grid">
       <PropertyCard
-        v-for="property in properties"
+        v-for="property in documents"
         :key="property.id"
         :property="property"
       />
     </div>
-     <div v-if="!isLoading && properties.length === 0 && !error" class="empty-state">
+     <div v-if="!loading && documents.length === 0 && !error" class="empty-state">
       <p>You haven't listed any properties yet.</p>
        <router-link to="/add-property" class="add-property-btn">Add a Property</router-link>
     </div>
+     <div v-if="hasMore && !loading" class="load-more-container">
+        <button @click="loadMore" class="load-more-button">Load More</button>
+      </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
-import { getFirestore, collection, getDocs, query, where } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, type User } from 'firebase/auth';
+import { useInfiniteScroll } from '../composables/useInfiniteScroll';
 import PropertyCard from '../components/PropertyCard.vue';
 
-const properties = ref<any[]>([]);
-const isLoading = ref(true);
-const error = ref<string | null>(null);
+const user = ref<User | null>(null);
+const auth = getAuth();
+const ownerId = ref<string | null>(null);
 
-onMounted(async () => {
-  const auth = getAuth();
-  const user = auth.currentUser;
+const { documents, loading, error, hasMore, loadMoreDocuments } = useInfiniteScroll('properties', { ownerId });
 
-  if (!user) {
-    error.value = "You must be logged in to see your properties.";
-    isLoading.value = false;
-    return;
-  }
-
-  const firestore = getFirestore();
-  try {
-    const q = query(collection(firestore, 'properties'), where('ownerId', '==', user.uid));
-    const querySnapshot = await getDocs(q);
-    properties.value = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (err) {
-    console.error("Error fetching properties: ", err);
-    error.value = "Sorry, we couldn't load your properties at the moment. Please try again later.";
-  } finally {
-    isLoading.value = false;
-  }
+onMounted(() => {
+  onAuthStateChanged(auth, (currentUser) => {
+    if (currentUser) {
+      user.value = currentUser;
+      ownerId.value = currentUser.uid;
+    } else {
+      user.value = null;
+      ownerId.value = null;
+    }
+  });
 });
+
+const loadMore = () => {
+  loadMoreDocuments();
+};
 </script>
 
 <style scoped>
@@ -125,4 +123,19 @@ onMounted(async () => {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
 }
+
+.load-more-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.load-more-button {
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
 </style>

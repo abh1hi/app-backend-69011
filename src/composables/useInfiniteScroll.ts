@@ -1,4 +1,4 @@
-import { ref, onMounted, onUnmounted, watch, type Ref } from 'vue';
+import { ref, onMounted, watch, type Ref } from 'vue';
 import { db } from '../firebase';
 import { 
   collection, 
@@ -23,13 +23,16 @@ export function useInfiniteScroll(collectionName: string, options: InfiniteScrol
   const loading = ref(false);
   const error = ref<string | null>(null);
   const lastDoc = ref<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const hasMore = ref(true);
   const documentsPerPage = 10;
 
   const loadMoreDocuments = async (isInitialLoad = false) => {
     if (loading.value) return;
-    // Do not fetch if ownerId is a condition but is not available yet.
+    
     if (ownerId && !ownerId.value) {
-      documents.value = []; // Clear documents if ownerId is cleared (e.g., on logout)
+      documents.value = [];
+      hasMore.value = true;
+      lastDoc.value = null;
       return;
     }
     loading.value = true;
@@ -38,21 +41,20 @@ export function useInfiniteScroll(collectionName: string, options: InfiniteScrol
       let q;
       const collectionRef = collection(db, collectionName);
       
-      const shouldUsePagination = !isInitialLoad && lastDoc.value;
-
+      const queryParts: any[] = [];
       if (ownerId?.value) {
-        if (shouldUsePagination) {
-          q = query(collectionRef, where('ownerId', '==', ownerId.value), orderBy('createdAt', 'desc'), startAfter(lastDoc.value), limit(documentsPerPage));
-        } else {
-          q = query(collectionRef, where('ownerId', '==', ownerId.value), orderBy('createdAt', 'desc'), limit(documentsPerPage));
-        }
-      } else {
-        if (shouldUsePagination) {
-          q = query(collectionRef, orderBy('createdAt', 'desc'), startAfter(lastDoc.value), limit(documentsPerPage));
-        } else {
-          q = query(collectionRef, orderBy('createdAt', 'desc'), limit(documentsPerPage));
-        }
+        queryParts.push(where('ownerId', '==', ownerId.value));
       }
+      queryParts.push(orderBy('createdAt', 'desc'));
+      queryParts.push(orderBy('__name__', 'desc'));
+
+      const shouldUsePagination = !isInitialLoad && lastDoc.value;
+      if (shouldUsePagination) {
+        queryParts.push(startAfter(lastDoc.value));
+      }
+      queryParts.push(limit(documentsPerPage));
+      
+      q = query(collectionRef, ...queryParts);
 
       const querySnapshot = await getDocs(q);
       const newDocuments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -63,45 +65,39 @@ export function useInfiniteScroll(collectionName: string, options: InfiniteScrol
         documents.value.push(...newDocuments);
       }
       
-      lastDoc.value = querySnapshot.docs[querySnapshot.docs.length - 1] ?? null;
+      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
+      lastDoc.value = lastVisible || null;
 
-    } catch (err) {
+      if (querySnapshot.docs.length < documentsPerPage) {
+        hasMore.value = false;
+      }
+
+    } catch (err: any) {
       console.error(`Error fetching ${collectionName}:`, err);
-      error.value = `Could not fetch ${collectionName}.`;
+      if (err.code === 'failed-precondition') {
+        error.value = 'This query requires a Firestore index. Please create it in the Firebase console.';
+        console.error('Missing Firestore index. Please create the required composite index in your Firebase console. The link to create it should be in the error message in the browser console.');
+      } else {
+        error.value = `Could not fetch ${collectionName}.`;
+      }
     } finally {
       loading.value = false;
     }
   };
 
-  const handleScroll = () => {
-    const { scrollTop, clientHeight, scrollHeight } = document.documentElement;
-    if (scrollTop + clientHeight >= scrollHeight - 20) {
-      loadMoreDocuments();
-    }
-  };
-
-  // Watch for changes in ownerId
   if (ownerId) {
     watch(ownerId, (newOwnerId) => {
-        // When ownerId changes, reset and perform an initial load.
         documents.value = [];
         lastDoc.value = null;
+        hasMore.value = true;
+        error.value = null;
         if (newOwnerId) {
             loadMoreDocuments(true);
         }
-    }, { immediate: true }); // `immediate` will trigger the watch handler right away with the initial value
+    }, { immediate: true });
   } else {
-    // If no ownerId is provided, load documents on mount.
     onMounted(() => loadMoreDocuments(true));
   }
 
-  onMounted(() => {
-    window.addEventListener('scroll', handleScroll);
-  });
-
-  onUnmounted(() => {
-    window.removeEventListener('scroll', handleScroll);
-  });
-
-  return { documents, loading, error, loadMoreDocuments };
+  return { documents, loading, error, hasMore, loadMoreDocuments };
 }

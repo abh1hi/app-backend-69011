@@ -9,15 +9,19 @@
     </div>
 
     <div class="properties-grid">
-      <PropertyCard v-for="property in properties" :key="property.id" :property="property" />
+      <PropertyCard v-for="property in documents" :key="property.id" :property="property" />
     </div>
 
-    <div v-if="loading" class="loading-indicator">
+    <div v-if="loading && documents.length === 0" class="loading-indicator">
       <div class="spinner"></div>
     </div>
 
-    <div v-if="!loading && properties.length === 0 && !error" class="empty-state">
+    <div v-if="!loading && documents.length === 0 && !error" class="empty-state">
       <p>No properties found. Add one to get started!</p>
+    </div>
+
+    <div v-if="hasMore && !loading" class="load-more-container">
+      <button @click="loadMore" class="load-more-button">Load More</button>
     </div>
   </div>
 </template>
@@ -26,7 +30,11 @@
 import PropertyCard from '../components/PropertyCard.vue';
 import { useInfiniteScroll } from '../composables/useInfiniteScroll';
 
-const { documents: properties, loading, error } = useInfiniteScroll('properties');
+const { documents, loading, error, hasMore, loadMoreDocuments } = useInfiniteScroll('properties');
+
+const loadMore = () => {
+  loadMoreDocuments();
+};
 </script>
 
 <style scoped>
@@ -73,5 +81,19 @@ const { documents: properties, loading, error } = useInfiniteScroll('properties'
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+.load-more-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.load-more-button {
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 </style>

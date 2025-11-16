@@ -50,22 +50,34 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **`OptionPicker.vue`:** A mobile-friendly, iOS-style option picker.
     *   **`FormModal.vue`:** A reusable modal component with a "Save" button for a better user experience.
 
-## Current Task: Bug Fixes (Completed)
+## Current Task: "Load More" Button
 
 ### Plan
 
 1.  **`src/composables/useInfiniteScroll.ts`:**
-    *   The `queryConstraints` parameter in the `useInfiniteScroll.ts` composable was not being properly referenced, which was causing a build error. I have corrected this by properly referencing the parameter.
-2.  **`src/views/AddProperty.vue`:**
-    *   The `MediaItem` interface was declared but never used. I have removed the unused interface.
-    *   The `submitProperty` function was declared but never used. I have removed the unused function.
-3.  **`src/views/Auth.vue`:**
-    *   `grecaptcha` was not defined. I have declared it as a global variable.
-4.  **`src/views/PreviewProperty.vue`:**
-    *   `previewUrl` and `file` did not exist on type `never`. I have added the `MediaItem` interface to the component and cast the `propertyData` as `any` before deleting the `media` property.
-5.  **`src/views/Profile.vue`:**
-    *   `Ref` from `vue` was declared but its value was never read. I have removed the unused import.
-6.  **`src/views/PropertyDetails.vue`:**
-    *   A string or undefined was not assignable to a string. I have added a null check to the `newVal.mediaUrls.photos[0]` to ensure that the value is not undefined.
-7.  **`src/stores/property.ts`:**
-    *   The type of `this` was not correctly inferred in the `updateProperty` action. I have explicitly typed `this` to fix this.
+    *   **Problem:** The infinite scroll was causing a loop and repeatedly loading the same data.
+    *   **Solution:**
+        *   Removed the scroll event listener.
+        *   Exposed the `hasMore` flag and the `loadMoreDocuments` function.
+2.  **`src/views/Profile.vue`:**
+    *   **Problem:** The profile page was using an infinite scroll to load properties.
+    *   **Solution:**
+        *   Replaced the infinite scroll with a "Load More" button.
+        *   The button is only visible when there are more properties to load.
+        *   Clicking the button calls the `loadMoreDocuments` function.
+3.  **`src/components/FeaturedProperties.vue`:**
+    *   **Problem:** The featured properties list was not paginated.
+    *   **Solution:**
+        *   Refactored the component to use the `useInfiniteScroll` composable.
+        *   Added a "Load More" button to fetch additional properties.
+4.  **`src/views/MyProperties.vue`:**
+    *   **Problem:** The component was fetching all of a user's properties at once, which is inefficient.
+    *   **Solution:**
+        *   Refactored the component to use the `useInfiniteScroll` composable.
+        *   Added a "Load More" button to paginate the user's properties.
+5.  **`src/views/Properties.vue`:**
+    *   **Problem:** The "Available Properties" page was using an infinite scroll but was missing the "Load More" button.
+    *   **Solution:**
+        *   Added a "Load More" button to the component.
+        *   The button is only visible when there are more properties to load.
+        *   Clicking the button calls the `loadMoreDocuments` function.

@@ -1,8 +1,9 @@
+
 [
   {
-    "origin": ["*"],
+    "origin": ["https://app-backend-69011.web.app"],
     "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "responseHeader": ["*"],
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"],
     "maxAgeSeconds": 3600
   }
 ]

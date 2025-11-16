@@ -1,48 +1,39 @@
 <template>
   <div class="featured-properties-container">
     <h2 class="section-title">Featured Properties</h2>
-    <div v-if="isLoading" class="loading-state">
+    <div v-if="loading && documents.length === 0" class="loading-state">
       <div class="spinner"></div>
       <p>Loading properties...</p>
     </div>
     <div v-if="error" class="error-state">
        <p>{{ error }}</p>
     </div>
-    <div v-if="!isLoading && !error" class="properties-grid">
+    <div v-if="!error" class="properties-grid">
       <PropertyCard 
-        v-for="property in properties" 
+        v-for="property in documents" 
         :key="property.id" 
         :property="property"
       />
     </div>
-     <div v-if="!isLoading && properties.length === 0 && !error" class="empty-state">
+     <div v-if="!loading && documents.length === 0 && !error" class="empty-state">
       <p>No properties found. Be the first to add one!</p>
     </div>
+    <div v-if="hasMore && !loading" class="load-more-container">
+        <button @click="loadMore" class="load-more-button">Load More</button>
+      </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { getFirestore, collection, getDocs, query, limit } from 'firebase/firestore';
+import { useInfiniteScroll } from '../composables/useInfiniteScroll';
 import PropertyCard from './PropertyCard.vue';
 
-const properties = ref<any[]>([]);
-const isLoading = ref(true);
-const error = ref<string | null>(null);
+const { documents, loading, error, hasMore, loadMoreDocuments } = useInfiniteScroll('properties');
 
-onMounted(async () => {
-  const firestore = getFirestore();
-  try {
-    const q = query(collection(firestore, 'properties'), limit(6));
-    const querySnapshot = await getDocs(q);
-    properties.value = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (err) {
-    console.error("Error fetching properties: ", err);
-    error.value = "Sorry, we couldn't load the properties at the moment. Please try again later.";
-  } finally {
-    isLoading.value = false;
-  }
-});
+const loadMore = () => {
+  loadMoreDocuments();
+};
+
 </script>
 
 <style scoped>
@@ -91,10 +82,24 @@ onMounted(async () => {
   100% { transform: rotate(360deg); }
 }
 
-.loading-state p, .error-state p, .empty-state p {
+.loading-state p, .error-state p, .empty.state p {
   font-size: 1rem;
   color: var(--text-secondary);
   font-weight: 500;
+}
+
+.load-more-container {
+  text-align: center;
+  margin-top: 2rem;
+}
+
+.load-more-button {
+  background-color: var(--primary-blue);
+  color: white;
+  padding: 1rem 2.5rem;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
