@@ -1,10 +1,10 @@
 <template>
   <div class="dashboard-page">
     <!-- User Profile Section -->
-    <div class="profile-card glass-card">
+    <div v-if="user" class="profile-card glass-card">
       <div class="profile-header">
-        <h2 class="profile-name">{{ user?.displayName || 'User' }}</h2>
-        <p class="profile-phone">{{ user?.phoneNumber || 'No phone number' }}</p>
+        <h2 class="profile-name">{{ user.displayName || 'User' }}</h2>
+        <p class="profile-phone">{{ user.phoneNumber || 'No phone number' }}</p>
       </div>
       <button @click="handleLogout" class="logout-button">
         <i class="fas fa-sign-out-alt"></i>
@@ -15,28 +15,28 @@
     <!-- Listed Properties Section -->
     <div class="properties-section">
       <h3 class="section-title">My Listed Properties</h3>
-      <div v-if="scroll.documents.value.length > 0" class="properties-list">
+      <div v-if="documents.length > 0" class="properties-list">
         <PropertyCard 
-          v-for="property in scroll.documents.value" 
+          v-for="property in documents" 
           :key="property.id" 
           :property="property" 
         />
       </div>
-      <div v-if="scroll.loading.value" class="loading-indicator">
+      <div v-if="loading" class="loading-indicator">
         <div class="spinner"></div>
       </div>
-      <div v-if="!scroll.loading.value && scroll.documents.value.length === 0 && !scroll.error.value" class="no-properties">
+      <div v-if="!loading && documents.length === 0 && !error" class="no-properties">
         <p>You haven't listed any properties yet.</p>
       </div>
-      <div v-if="scroll.error.value" class="error-state">
-        <p>{{ scroll.error.value }}</p>
+      <div v-if="error" class="error-state">
+        <p>{{ error }}</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, reactive } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { getAuth, onAuthStateChanged, signOut, type User } from 'firebase/auth';
 import { useRouter } from 'vue-router';
 import { useInfiniteScroll } from '../composables/useInfiniteScroll';
@@ -46,29 +46,42 @@ const user = ref<User | null>(null);
 const router = useRouter();
 const auth = getAuth();
 
-const scroll = reactive({
-  documents: ref([]),
-  loading: ref(true),
-  error: ref<string | null>(null),
-});
+// Create a ref for the ownerId that will be passed to the composable.
+const ownerId = ref<string | null>(null);
+
+// Call the composable immediately and synchronously.
+// It will not fetch data until ownerId has a value.
+const { documents, loading, error } = useInfiniteScroll('properties', { ownerId });
+
+let unsubscribe: (() => void) | null = null;
 
 onMounted(() => {
-  onAuthStateChanged(auth, async (currentUser) => {
+  // Listen for authentication state changes.
+  unsubscribe = onAuthStateChanged(auth, (currentUser) => {
     if (currentUser) {
       user.value = currentUser;
-      const { documents, loading, error } = useInfiniteScroll('properties', currentUser.uid);
-      scroll.documents = documents;
-      scroll.loading = loading;
-      scroll.error = error;
+      // When the user is logged in, update the ownerId.
+      // The watcher in the composable will trigger the data fetch.
+      ownerId.value = currentUser.uid;
     } else {
+      // If there is no user, reset the user and ownerId, and redirect.
+      user.value = null;
+      ownerId.value = null;
       router.push('/login');
     }
   });
 });
 
+onUnmounted(() => {
+  // Clean up the auth state listener.
+  if (unsubscribe) {
+    unsubscribe();
+  }
+});
+
 const handleLogout = async () => {
   await signOut(auth);
-  router.push('/login');
+  // The onAuthStateChanged listener will handle the redirect.
 };
 </script>
 

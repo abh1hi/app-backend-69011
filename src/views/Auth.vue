@@ -41,6 +41,8 @@ import { ref, onMounted } from 'vue';
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, updateProfile } from 'firebase/auth';
 import { useRouter } from 'vue-router';
 
+declare const grecaptcha: any;
+
 const isLogin = ref(true);
 const name = ref('');
 const phoneNumber = ref('');

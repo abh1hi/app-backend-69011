@@ -144,7 +144,7 @@ onMounted(async () => {
 
 watch(property, (newVal) => {
   if (newVal && newVal.mediaUrls?.photos?.length) {
-    mainImage.value = newVal.mediaUrls.photos[0];
+    mainImage.value = newVal.mediaUrls.photos[0] ?? '';
   }
 });
 </script>

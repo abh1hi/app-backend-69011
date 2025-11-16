@@ -81,7 +81,12 @@ import { useRouter } from 'vue-router';
 import { usePropertyStore } from '../stores/property';
 import { getAuth } from 'firebase/auth';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getFirestore, collection, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+
+interface MediaItem {
+  file: File;
+  previewUrl: string;
+}
 
 const router = useRouter();
 const propertyStore = usePropertyStore();
@@ -106,7 +111,7 @@ const submitProperty = async () => {
 
     // Upload photos
     const photoUrls = await Promise.all(
-      propertyStore.property.media.photos.map(async (photo) => {
+      propertyStore.property.media.photos.map(async (photo: MediaItem) => {
         const photoRef = storageRef(storage, `properties/${user.uid}/${Date.now()}_${photo.file.name}`);
         await uploadBytes(photoRef, photo.file);
         return await getDownloadURL(photoRef);
@@ -115,19 +120,19 @@ const submitProperty = async () => {
 
     // Upload videos
     const videoUrls = await Promise.all(
-      propertyStore.property.media.videos.map(async (video) => {
+      propertyStore.property.media.videos.map(async (video: MediaItem) => {
         const videoRef = storageRef(storage, `properties/${user.uid}/${Date.now()}_${video.file.name}`);
         await uploadBytes(videoRef, video.file);
         return await getDownloadURL(videoRef);
       })
     );
 
-    // Create a clean property object for Firestore
-    const propertyData = { ...propertyStore.property };
-    delete propertyData.media; // Remove media files before saving to Firestore
-    
-    // Add the media URLs to the property data
-    propertyData.mediaUrls = { photos: photoUrls, videos: videoUrls };
+    const propertyData = {
+      ...propertyStore.property,
+      mediaUrls: { photos: photoUrls, videos: videoUrls },
+      createdAt: serverTimestamp()
+    };
+    delete (propertyData as any).media; 
 
     await addDoc(collection(firestore, 'properties'), propertyData);
 

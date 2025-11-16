@@ -50,13 +50,22 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **`OptionPicker.vue`:** A mobile-friendly, iOS-style option picker.
     *   **`FormModal.vue`:** A reusable modal component with a "Save" button for a better user experience.
 
-## Current Task: Implement Infinite Scrolling (Completed)
+## Current Task: Bug Fixes (Completed)
 
 ### Plan
 
-1.  **Create a Composable:**
-    *   Created a reusable composable function named `useInfiniteScroll` to encapsulate the logic for fetching paginated data from Firestore and handling scroll events.
-2.  **Update `Properties.vue`:**
-    *   Refactored the `Properties.vue` component to use the new `useInfiniteScroll` composable, which will enable infinite scrolling for the list of all properties.
-3.  **Update `Profile.vue`:**
-    *   Updated the `Profile.vue` component to use the same `useInfiniteScroll` composable for the "My Listed Properties" section.
+1.  **`src/composables/useInfiniteScroll.ts`:**
+    *   The `queryConstraints` parameter in the `useInfiniteScroll.ts` composable was not being properly referenced, which was causing a build error. I have corrected this by properly referencing the parameter.
+2.  **`src/views/AddProperty.vue`:**
+    *   The `MediaItem` interface was declared but never used. I have removed the unused interface.
+    *   The `submitProperty` function was declared but never used. I have removed the unused function.
+3.  **`src/views/Auth.vue`:**
+    *   `grecaptcha` was not defined. I have declared it as a global variable.
+4.  **`src/views/PreviewProperty.vue`:**
+    *   `previewUrl` and `file` did not exist on type `never`. I have added the `MediaItem` interface to the component and cast the `propertyData` as `any` before deleting the `media` property.
+5.  **`src/views/Profile.vue`:**
+    *   `Ref` from `vue` was declared but its value was never read. I have removed the unused import.
+6.  **`src/views/PropertyDetails.vue`:**
+    *   A string or undefined was not assignable to a string. I have added a null check to the `newVal.mediaUrls.photos[0]` to ensure that the value is not undefined.
+7.  **`src/stores/property.ts`:**
+    *   The type of `this` was not correctly inferred in the `updateProperty` action. I have explicitly typed `this` to fix this.

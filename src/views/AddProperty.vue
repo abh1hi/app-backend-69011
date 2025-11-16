@@ -47,7 +47,7 @@
       </button>
     </div>
 
-    <button v-if="!allSectionsCompleted" @click="submitProperty" class="submit-btn" disabled>
+    <button v-if="!allSectionsCompleted" class="submit-btn" disabled>
       Complete all sections to continue
     </button>
     <button v-else @click="previewProperty" class="submit-btn preview-btn">
@@ -249,7 +249,9 @@ const propertyStore = usePropertyStore();
 
 const allAmenities = ['Gym', 'Pool', 'Garden', 'Lift'];
 const fileInput = ref<HTMLInputElement | null>(null);
-const mediaType = ref('photo');
+const mediaType = ref<'photo' | 'video'>('photo');
+
+type PropertySection = 'basic' | 'pricing' | 'features' | 'media' | 'contact' | 'legal';
 
 const isBasicModalVisible = ref(false);
 const isPricingModalVisible = ref(false);
@@ -266,7 +268,7 @@ const allSectionsCompleted = computed(() => {
   return Object.values(propertyStore.completedSections).every(Boolean);
 });
 
-const openSection = (section: string) => {
+const openSection = (section: PropertySection) => {
   if (section === 'basic') isBasicModalVisible.value = true;
   else if (section === 'pricing') isPricingModalVisible.value = true;
   else if (section === 'features') isFeaturesModalVisible.value = true;
@@ -275,7 +277,7 @@ const openSection = (section: string) => {
   else if (section === 'legal') isLegalModalVisible.value = true;
 };
 
-const saveSection = (section: string) => {
+const saveSection = (section: PropertySection) => {
   propertyStore.setSectionCompleted(section, true);
   if (section === 'basic') isBasicModalVisible.value = false;
   else if (section === 'pricing') isPricingModalVisible.value = false;
@@ -308,9 +310,9 @@ const handlePickerSelect = (selectedValue: string) => {
       fileInput.value.click();
     }
   } else if (activePickerField.value) {
-    const [section, field] = activePickerField.value.split('.');
+    const [section, field] = activePickerField.value.split('.') as [PropertySection, string];
     if (section && field && propertyStore.property[section]) {
-        propertyStore.property[section][field] = selectedValue;
+        (propertyStore.property[section] as any)[field] = selectedValue;
     }
   }
 };
