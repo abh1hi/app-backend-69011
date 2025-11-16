@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 
 interface MediaItem {
   file: File;
@@ -6,6 +7,12 @@ interface MediaItem {
 }
 
 type PropertySection = 'basic' | 'pricing' | 'features' | 'media' | 'contact' | 'legal';
+
+interface CachedQuery {
+  documents: DocumentData[];
+  lastDoc: QueryDocumentSnapshot<DocumentData> | null;
+  hasMore: boolean;
+}
 
 export const usePropertyStore = defineStore('property', {
   state: () => ({
@@ -24,8 +31,12 @@ export const usePropertyStore = defineStore('property', {
       features: false,
       media: false,
       contact: false,
-      legal: false
-    }
+legal: false
+    },
+    // Caching state for queries (lists of properties)
+    cachedQueries: {} as Record<string, CachedQuery>,
+    // Caching state for individual properties
+    cachedProperties: {} as Record<string, DocumentData>
   }),
   actions: {
     updateProperty<T extends PropertySection>(this: any, section: T, data: Partial<typeof this.property[T]>) {
@@ -52,6 +63,40 @@ export const usePropertyStore = defineStore('property', {
     },
     resetState() {
       this.$reset();
+    },
+
+    // Caching actions for queries
+    addCachedDocuments(queryKey: string, newDocs: DocumentData[], lastDoc: QueryDocumentSnapshot<DocumentData> | null, hasMore: boolean) {
+      const existingQuery = this.cachedQueries[queryKey];
+      if (existingQuery) {
+        existingQuery.documents.push(...newDocs);
+        existingQuery.lastDoc = lastDoc;
+        existingQuery.hasMore = hasMore;
+      } else {
+        this.cachedQueries[queryKey] = {
+          documents: newDocs,
+          lastDoc,
+          hasMore
+        };
+      }
+    },
+    getCachedQuery(queryKey: string): CachedQuery | undefined {
+      return this.cachedQueries[queryKey];
+    },
+    clearCache() {
+      this.cachedQueries = {};
+      this.cachedProperties = {};
+    },
+    clearQueryCache(queryKey: string) {
+      delete this.cachedQueries[queryKey];
+    },
+
+    // Caching actions for individual properties
+    cacheProperty(propertyId: string, propertyData: DocumentData) {
+      this.cachedProperties[propertyId] = propertyData;
+    },
+    getCachedProperty(propertyId: string): DocumentData | undefined {
+      return this.cachedProperties[propertyId];
     }
   }
 });

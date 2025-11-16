@@ -41,44 +41,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { getAuth, onAuthStateChanged, signOut, type User } from 'firebase/auth';
-import { useRouter } from 'vue-router';
+import { computed } from 'vue';
+import { useUserStore } from '../stores/user';
 import { useInfiniteScroll } from '../composables/useInfiniteScroll';
 import PropertyCard from '../components/PropertyCard.vue';
 
-const user = ref<User | null>(null);
-const router = useRouter();
-const auth = getAuth();
+const userStore = useUserStore();
+const user = computed(() => userStore.user);
 
-const ownerId = ref<string | null>(null);
+const ownerId = computed(() => user.value?.uid || null);
 
 // Get all the reactive properties from the composable
 const { documents, loading, error, hasMore, loadMoreDocuments } = useInfiniteScroll('properties', { ownerId });
 
-let unsubscribe: (() => void) | null = null;
-
-onMounted(() => {
-  unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-    if (currentUser) {
-      user.value = currentUser;
-      ownerId.value = currentUser.uid;
-    } else {
-      user.value = null;
-      ownerId.value = null;
-      router.push('/login');
-    }
-  });
-});
-
-onUnmounted(() => {
-  if (unsubscribe) {
-    unsubscribe();
-  }
-});
-
 const handleLogout = async () => {
-  await signOut(auth);
+  await userStore.logout();
 };
 
 const loadMore = () => {

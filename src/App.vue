@@ -21,11 +21,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import Sidebar from './components/Sidebar.vue';
 import BottomNav from './components/BottomNav.vue';
+import { useUserStore } from './stores/user';
 
 const isSidebarOpen = ref(false);
+const userStore = useUserStore();
+
+onMounted(() => {
+  userStore.listenForAuthStateChanges();
+});
 </script>
 
 <style scoped>

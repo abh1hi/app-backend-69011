@@ -101,10 +101,11 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, type DocumentData } from 'firebase/firestore';
 import { db } from '../firebase';
+import { usePropertyStore } from '../stores/property';
 
-interface Property {
+interface Property extends DocumentData {
   id: string;
   basic?: {
     title?: string;
@@ -129,16 +130,31 @@ interface Property {
 const property = ref<Property | null>(null);
 const mainImage = ref('');
 const route = useRoute();
+const propertyStore = usePropertyStore();
 
 onMounted(async () => {
   const propertyId = route.params.id as string;
-  const docRef = doc(db, "properties", propertyId);
-  const docSnap = await getDoc(docRef);
+  
+  // Check for cached data first
+  const cachedProperty = propertyStore.getCachedProperty(propertyId);
 
-  if (docSnap.exists()) {
-    property.value = { id: docSnap.id, ...docSnap.data() } as Property;
+  if (cachedProperty) {
+    console.log(`[Cache] Loading property '${propertyId}' from cache.`);
+    property.value = { id: propertyId, ...cachedProperty } as Property;
   } else {
-    console.error("No such document!");
+    console.log(`[API] Fetching property '${propertyId}' from Firestore.`);
+    const docRef = doc(db, "properties", propertyId);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const propertyData = docSnap.data();
+      property.value = { id: docSnap.id, ...propertyData } as Property;
+      // Cache the newly fetched data
+      propertyStore.cacheProperty(propertyId, propertyData);
+      console.log(`[Cache] Stored property '${propertyId}' in cache.`);
+    } else {
+      console.error("No such document!");
+    }
   }
 });
 
@@ -146,7 +162,7 @@ watch(property, (newVal) => {
   if (newVal && newVal.mediaUrls?.photos?.length) {
     mainImage.value = newVal.mediaUrls.photos[0] ?? '';
   }
-});
+}, { immediate: true });
 </script>
 
 <style scoped>

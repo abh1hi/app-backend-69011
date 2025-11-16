@@ -1,4 +1,4 @@
-import { ref, onMounted, watch, type Ref } from 'vue';
+import { ref, onMounted, watch, type Ref, computed } from 'vue';
 import { db } from '../firebase';
 import { 
   collection, 
@@ -9,8 +9,8 @@ import {
   limit, 
   getDocs, 
   type DocumentData, 
-  type QueryDocumentSnapshot 
 } from 'firebase/firestore';
+import { usePropertyStore } from '../stores/property';
 
 interface InfiniteScrollOptions {
   ownerId?: Ref<string | null>;
@@ -18,21 +18,34 @@ interface InfiniteScrollOptions {
 
 export function useInfiniteScroll(collectionName: string, options: InfiniteScrollOptions = {}) {
   const { ownerId } = options;
+  const propertyStore = usePropertyStore();
 
   const documents = ref<DocumentData[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
-  const lastDoc = ref<QueryDocumentSnapshot<DocumentData> | null>(null);
   const hasMore = ref(true);
-  const documentsPerPage = 10;
+
+  const queryKey = computed(() => {
+    // Use a more descriptive name for the general list of properties
+    return ownerId?.value ? `properties_owner_${ownerId.value}` : 'properties_all';
+  });
 
   const loadMoreDocuments = async (isInitialLoad = false) => {
     if (loading.value) return;
-    
+
+    const cachedQuery = propertyStore.getCachedQuery(queryKey.value);
+    // On the initial load of a list, check for cached data first.
+    if (isInitialLoad && cachedQuery) {
+      console.log(`[Cache] Loading properties for list: '${queryKey.value}' from cache.`);
+      documents.value = cachedQuery.documents;
+      hasMore.value = cachedQuery.hasMore;
+      return; // Data is already cached, no need to fetch.
+    }
+
     if (ownerId && !ownerId.value) {
       documents.value = [];
       hasMore.value = true;
-      lastDoc.value = null;
+      propertyStore.clearQueryCache(queryKey.value);
       return;
     }
     loading.value = true;
@@ -48,28 +61,32 @@ export function useInfiniteScroll(collectionName: string, options: InfiniteScrol
       queryParts.push(orderBy('createdAt', 'desc'));
       queryParts.push(orderBy('__name__', 'desc'));
 
-      const shouldUsePagination = !isInitialLoad && lastDoc.value;
+      const lastDoc = cachedQuery ? cachedQuery.lastDoc : null;
+      const shouldUsePagination = !isInitialLoad && lastDoc;
       if (shouldUsePagination) {
-        queryParts.push(startAfter(lastDoc.value));
+        queryParts.push(startAfter(lastDoc));
       }
-      queryParts.push(limit(documentsPerPage));
+      queryParts.push(limit(10));
       
       q = query(collectionRef, ...queryParts);
+      
+      if (isInitialLoad) {
+        console.log(`[API] Fetching initial properties for list: '${queryKey.value}' from Firestore.`);
+      } else {
+        console.log(`[API] Fetching more properties for list: '${queryKey.value}' from Firestore.`);
+      }
 
       const querySnapshot = await getDocs(q);
       const newDocuments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-      if (isInitialLoad) {
-        documents.value = newDocuments;
-      } else {
-        documents.value.push(...newDocuments);
-      }
-      
-      const lastVisible = querySnapshot.docs[querySnapshot.docs.length - 1];
-      lastDoc.value = lastVisible || null;
+      const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
+      const newHasMore = querySnapshot.docs.length === 10;
 
-      if (querySnapshot.docs.length < documentsPerPage) {
-        hasMore.value = false;
+      propertyStore.addCachedDocuments(queryKey.value, newDocuments, newLastDoc, newHasMore);
+      const updatedQuery = propertyStore.getCachedQuery(queryKey.value);
+      if(updatedQuery){
+        documents.value = updatedQuery.documents;
+        hasMore.value = updatedQuery.hasMore;
       }
 
     } catch (err: any) {
@@ -86,14 +103,18 @@ export function useInfiniteScroll(collectionName: string, options: InfiniteScrol
   };
 
   if (ownerId) {
-    watch(ownerId, (newOwnerId) => {
+    watch(ownerId, (newOwnerId, oldOwnerId) => {
+      if (newOwnerId !== oldOwnerId) {
+        // Clear the cache for the specific query when the ownerId changes.
+        const oldQueryKey = newOwnerId ? `properties_owner_${oldOwnerId}` : 'properties_all';
+        propertyStore.clearQueryCache(oldQueryKey);
         documents.value = [];
-        lastDoc.value = null;
         hasMore.value = true;
         error.value = null;
         if (newOwnerId) {
             loadMoreDocuments(true);
         }
+      }
     }, { immediate: true });
   } else {
     onMounted(() => loadMoreDocuments(true));

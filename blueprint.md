@@ -30,6 +30,10 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
 *   **Routing:** Client-side routing with `vue-router`, including protected routes.
 *   **State Management:**
     *   **Pinia:** The official state management library for Vue.js, used to manage the state of the property being created.
+    *   **Centralized User State:** A new `user` store (`src/stores/user.ts`) has been created to manage the user's authentication state. This provides a single source of truth for the user's data and eliminates redundant API calls.
+    *   **Optimized Data Fetching & Caching:**
+        *   **List Caching:** The `property` store (`src/stores/property.ts`) caches lists of properties (e.g., for "My Properties", "Featured Properties"). The `useInfiniteScroll` composable leverages this cache to avoid refetching lists of data.
+        *   **Individual Property Caching:** The store also caches individual property details. When a user visits a property page, the data is fetched once and then served from the cache on subsequent visits, making navigation back to the same property instantaneous.
 *   **Responsive Navigation:**
     *   A collapsible sidebar for desktop users.
     *   A bottom navigation bar for mobile users.
@@ -50,34 +54,10 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **`OptionPicker.vue`:** A mobile-friendly, iOS-style option picker.
     *   **`FormModal.vue`:** A reusable modal component with a "Save" button for a better user experience.
 
-## Current Task: "Load More" Button
+## Current Task: Add Console Logging for Cache Testing
 
 ### Plan
 
-1.  **`src/composables/useInfiniteScroll.ts`:**
-    *   **Problem:** The infinite scroll was causing a loop and repeatedly loading the same data.
-    *   **Solution:**
-        *   Removed the scroll event listener.
-        *   Exposed the `hasMore` flag and the `loadMoreDocuments` function.
-2.  **`src/views/Profile.vue`:**
-    *   **Problem:** The profile page was using an infinite scroll to load properties.
-    *   **Solution:**
-        *   Replaced the infinite scroll with a "Load More" button.
-        *   The button is only visible when there are more properties to load.
-        *   Clicking the button calls the `loadMoreDocuments` function.
-3.  **`src/components/FeaturedProperties.vue`:**
-    *   **Problem:** The featured properties list was not paginated.
-    *   **Solution:**
-        *   Refactored the component to use the `useInfiniteScroll` composable.
-        *   Added a "Load More" button to fetch additional properties.
-4.  **`src/views/MyProperties.vue`:**
-    *   **Problem:** The component was fetching all of a user's properties at once, which is inefficient.
-    *   **Solution:**
-        *   Refactored the component to use the `useInfiniteScroll` composable.
-        *   Added a "Load More" button to paginate the user's properties.
-5.  **`src/views/Properties.vue`:**
-    *   **Problem:** The "Available Properties" page was using an infinite scroll but was missing the "Load More" button.
-    *   **Solution:**
-        *   Added a "Load More" button to the component.
-        *   The button is only visible when there are more properties to load.
-        *   Clicking the button calls the `loadMoreDocuments` function.
+1.  **Add Logging to `useInfiniteScroll.ts`:** Injected `console.log` statements to provide real-time feedback on whether property lists are being loaded from the cache or fetched fresh from the API. The logs clearly indicate which list is being loaded (e.g., `properties_all` or `properties_owner_...`).
+2.  **Add Logging to `PropertyDetails.vue`:** Added `console.log` statements to the `onMounted` hook to show whether an individual property's details are being loaded from the cache or fetched from Firestore. The log includes the property ID for easy identification.
+3.  **Update Blueprint:** Documented the implementation of the logging for future testing and debugging purposes.
