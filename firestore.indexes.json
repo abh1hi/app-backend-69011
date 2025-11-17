@@ -5,57 +5,191 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "basic.saleOrRent",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "pricing.price",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "properties",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "basic.state",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "pricing.price",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "properties",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "basic.saleOrRent",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "basic.state",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "pricing.price",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "properties",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
           "fieldPath": "ownerId",
           "order": "ASCENDING"
         },
         {
           "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "features.amenities",
+          "arrayConfig": "CONTAINS"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "basic.size",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "basic.size",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "basic.saleOrRent",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pricing.price",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "basic.state",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pricing.price",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "basic.propertyType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pricing.price",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "basic.saleOrRent",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "basic.state",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pricing.price",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "basic.saleOrRent",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "basic.propertyType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pricing.price",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "basic.state",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "basic.propertyType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pricing.price",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "basic.saleOrRent",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "basic.state",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "basic.propertyType",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pricing.price",
+          "order": "DESCENDING"
+        },
+        {
+          "fieldPath": "__name__",
           "order": "DESCENDING"
         }
       ]
