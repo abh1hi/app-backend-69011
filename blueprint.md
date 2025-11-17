@@ -14,6 +14,7 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **Quick Actions:** A set of quick action buttons for easy access to key features.
     *   **Featured Properties:** A grid of featured properties fetched from Cloud Firestore.
     *   **Mobile-First Design:** The home page is optimized for a native-like experience on mobile devices, with a compact layout, responsive components, and polished styles.
+    *   **Ui Inspiration:** The UI is inpisre by IOS 14 Cocoa Touch and Android 16 Material UI. It is a blend of both.
 *   **My Properties Page:** A dedicated page for users to view and manage their own property listings.
 *   **Dashboard (`Profile.vue`):**
     *   **User Profile Section:** Displays the user's full name and phone number.
@@ -53,11 +54,11 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **`PropertyCard.vue`:** A component to display a single property listing in a modern, card-based layout.
     *   **`OptionPicker.vue`:** A mobile-friendly, iOS-style option picker.
     *   **`FormModal.vue`:** A reusable modal component with a "Save" button for a better user experience.
+*   **Smoother Android Navigation:** Optimized the Android back button behavior by removing an unnecessary `setTimeout` delay in `src/main.ts`. This makes the navigation feel more responsive and native.
 
-## Current Task: Add Console Logging for Cache Testing
+## Current Task: Optimize Android Back Button Navigation
 
 ### Plan
 
-1.  **Add Logging to `useInfiniteScroll.ts`:** Injected `console.log` statements to provide real-time feedback on whether property lists are being loaded from the cache or fetched fresh from the API. The logs clearly indicate which list is being loaded (e.g., `properties_all` or `properties_owner_...`).
-2.  **Add Logging to `PropertyDetails.vue`:** Added `console.log` statements to the `onMounted` hook to show whether an individual property's details are being loaded from the cache or fetched from Firestore. The log includes the property ID for easy identification.
-3.  **Update Blueprint:** Documented the implementation of the logging for future testing and debugging purposes.
+1.  **Optimize Back Button Logic:** Removed the `setTimeout` and simplified the logic in `src/main.ts` for a more responsive back button.
+2.  **Update Blueprint:** Documented the navigation improvement in the `blueprint.md` file.
