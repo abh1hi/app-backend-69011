@@ -74,8 +74,11 @@ onMounted(async () => {
 });
 
 const applyFilters = () => {
+  // Map the internal 'sale'/'rent' state to the database values 'For Sale'/'For Rent'
+  const saleOrRentValue = saleOrRent.value === 'sale' ? 'For Sale' : 'For Rent';
+  
   emit('apply-filters', {
-    saleOrRent: saleOrRent.value,
+    saleOrRent: saleOrRentValue,
     priceRange: [0, price.value],
     state: selectedState.value,
   });

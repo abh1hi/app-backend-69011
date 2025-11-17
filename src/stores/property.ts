@@ -12,6 +12,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 
+// ... (interfaces remain the same)
+
 interface MediaItem {
   file: File;
   previewUrl: string;
@@ -19,7 +21,7 @@ interface MediaItem {
 
 type PropertySection = 'basic' | 'pricing' | 'features' | 'media' | 'contact' | 'legal';
 
-interface CachedQuery {
+export interface CachedQuery {
   documents: DocumentData[];
   lastDoc: QueryDocumentSnapshot<DocumentData> | null;
   hasMore: boolean;
@@ -31,6 +33,7 @@ interface FetchPropertiesOptions {
   filters?: any;
   lastDoc?: QueryDocumentSnapshot<DocumentData> | null;
 }
+
 
 export const usePropertyStore = defineStore('property', {
   state: () => ({
@@ -82,142 +85,132 @@ export const usePropertyStore = defineStore('property', {
     resetState() {
       this.$reset();
     },
-    addCachedDocuments(queryKey: string, newDocs: DocumentData[], lastDoc: QueryDocumentSnapshot<DocumentData> | null, hasMore: boolean) {
-      console.log(`[PropertyStore] Caching documents for key: ${queryKey}`);
-      const existingQuery = this.cachedQueries[queryKey];
-      if (existingQuery) {
-        existingQuery.documents.push(...newDocs);
-        existingQuery.lastDoc = lastDoc;
-        existingQuery.hasMore = hasMore;
-      } else {
-        this.cachedQueries[queryKey] = { documents: newDocs, lastDoc, hasMore };
-      }
-    },
-    getCachedQuery(queryKey: string): CachedQuery | undefined {
-      console.log(`[PropertyStore] Getting cached query for key: ${queryKey}`);
-      return this.cachedQueries[queryKey];
-    },
     clearCache() {
-      console.log("[PropertyStore] Clearing all caches.");
       this.cachedQueries = {};
       this.cachedProperties = {};
     },
     clearQueryCache(queryKey: string) {
-      console.log(`[PropertyStore] Clearing cache for key: ${queryKey}`);
       delete this.cachedQueries[queryKey];
     },
-    cacheProperty(propertyId: string, propertyData: DocumentData) {
-      this.cachedProperties[propertyId] = propertyData;
+    cacheProperty(property: DocumentData) {
+      if (property && property.id) {
+        this.cachedProperties[property.id] = property;
+      }
     },
-    getCachedProperty(propertyId: string): DocumentData | undefined {
-      return this.cachedProperties[propertyId];
+    getCachedProperty(id: string): DocumentData | undefined {
+      const cachedProperty = this.cachedProperties[id];
+      if (cachedProperty) {
+        console.log(`[PropertyStore] Loaded property ${id} from cache.`);
+      }
+      return cachedProperty;
+    },
+    cacheQuery(queryKey: string, data: CachedQuery) {
+      console.log(`[PropertyStore] Caching query results for key: ${queryKey}`);
+      this.cachedQueries[queryKey] = data;
+    },
+    getCachedQuery(queryKey: string): CachedQuery | undefined {
+      const cached = this.cachedQueries[queryKey];
+      if (cached) {
+        console.log(`[PropertyStore] Found cached query for key: ${queryKey}`);
+      }
+      return cached;
     },
     async fetchProperties(options: FetchPropertiesOptions) {
-      console.log("[PropertyStore] fetchProperties called with options:", JSON.stringify(options));
       const { collectionName, ownerId, filters, lastDoc } = options;
       const collectionRef = collection(db, collectionName);
       const queryParts: any[] = [];
       let isOrderedByPrice = false;
 
       if (ownerId) {
-        console.log("[PropertyStore] Adding ownerId filter:", ownerId);
         queryParts.push(where('ownerId', '==', ownerId));
       }
 
       if (filters) {
-        console.log("[PropertyStore] Applying filters:", JSON.stringify(filters));
         if (filters.saleOrRent) {
           queryParts.push(where('basic.saleOrRent', '==', filters.saleOrRent));
         }
-        if (filters.state) {
+        if (filters.state && filters.state.trim() !== '') {
           queryParts.push(where('basic.state', '==', filters.state));
         }
 
         if (filters.priceRange) {
-          console.log("[PropertyStore] Applying price range filter:", filters.priceRange);
           queryParts.push(where('pricing.price', '>=', filters.priceRange[0]));
           queryParts.push(where('pricing.price', '<=', filters.priceRange[1]));
           queryParts.push(orderBy('pricing.price', 'desc'));
           isOrderedByPrice = true;
         }
       }
-      
+
       if (!isOrderedByPrice) {
-        console.log("[PropertyStore] No price filter, ordering by createdAt.");
         queryParts.push(orderBy('createdAt', 'desc'));
       }
 
-      queryParts.push(orderBy('__name__', 'desc'));
-
       if (lastDoc) {
-        console.log("[PropertyStore] Paginating after doc:", lastDoc.id);
         queryParts.push(startAfter(lastDoc));
       }
 
       queryParts.push(limit(10));
 
-      console.log("[PropertyStore] Executing query with parts:", queryParts.map(p => p.toString()));
       const q = query(collectionRef, ...queryParts);
-      const querySnapshot = await getDocs(q);
-      console.log(`[PropertyStore] Query returned ${querySnapshot.docs.length} documents.`);
 
-      const newDocuments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
-      const hasMore = querySnapshot.docs.length === 10;
-
-      return { newDocuments, newLastDoc, hasMore };
-    },
-    async fetchHighestPrice(): Promise<number> {
-      console.log("[PropertyStore] Fetching highest price.");
       try {
-        const q = query(
-          collection(db, 'properties'),
-          orderBy('pricing.price', 'desc'),
-          limit(1)
-        );
         const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          const highestPriceValue = querySnapshot.docs[0].data()?.pricing?.price;
-          if (highestPriceValue != null) {
-            this.highestPrice = highestPriceValue;
-            console.log(`[PropertyStore] Highest price found: ${highestPriceValue}`);
-            return highestPriceValue;
-          } else {
-             console.log("[PropertyStore] Highest price property found, but price is missing. Returning default.");
-             return this.highestPrice;
+        const newDocuments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        if (newDocuments.length > 0) {
+            console.log(`[PropertyStore] Loaded ${newDocuments.length} new documents from Firestore.`);
+        }
+
+        newDocuments.forEach(doc => this.cacheProperty(doc));
+        
+        const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
+        const hasMore = querySnapshot.docs.length === 10;
+
+        return { newDocuments, newLastDoc, hasMore };
+      } catch (error) {
+        console.error("[PropertyStore] ERROR executing getDocs:", error);
+        throw error;
+      }
+    },
+
+    async fetchHighestPrice(): Promise<number> {
+        try {
+          const q = query(
+            collection(db, 'properties'),
+            orderBy('pricing.price', 'desc'),
+            limit(1)
+          );
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            const highestPriceValue = querySnapshot.docs[0].data()?.pricing?.price;
+            if (highestPriceValue != null) {
+              this.highestPrice = highestPriceValue;
+              return highestPriceValue;
+            }
           }
-        } else {
-          console.log("[PropertyStore] No properties found, returning default high value.");
+          return this.highestPrice;
+        } catch (error) {
+          console.error("[PropertyStore] Error fetching highest price:", error);
           return this.highestPrice;
         }
-      } catch (error) {
-        console.error("[PropertyStore] Error fetching highest price:", error);
-        return this.highestPrice;
+      },
+  
+      async fetchAvailableStates() {
+        if (this.availableStates.length > 0) return;
+        try {
+          const querySnapshot = await getDocs(collection(db, 'properties'));
+          const states = new Set<string>();
+          querySnapshot.forEach((doc) => {
+            const state = doc.data()?.basic?.state;
+            if (state && typeof state === 'string' && state.trim() !== '') {
+              states.add(state);
+            }
+          });
+          this.availableStates = Array.from(states).sort();
+        } catch (error) {
+          console.error("Error fetching available states:", error);
+          this.availableStates = [];
+        }
       }
-    },
-    async fetchAvailableStates() {
-      if (this.availableStates.length > 0) {
-        return;
-      }
-
-      try {
-        const querySnapshot = await getDocs(collection(db, 'properties'));
-        const states = new Set<string>();
-        
-        querySnapshot.forEach((doc) => {
-          const propertyData = doc.data();
-          const state = propertyData?.basic?.state;
-          if (state && typeof state === 'string' && state.trim() !== '') {
-            states.add(state);
-          }
-        });
-        
-        this.availableStates = Array.from(states).sort();
-
-      } catch (error) {
-        console.error("Error fetching available states:", error);
-        this.availableStates = []; // Clear on error to prevent inconsistent state
-      }
-    }
   }
 });

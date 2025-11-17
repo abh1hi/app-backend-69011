@@ -38,37 +38,112 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import PropertyCard from '../components/PropertyCard.vue';
 import FilterProperties from '../components/FilterProperties.vue';
-import { useInfiniteScroll } from '../composables/useInfiniteScroll';
+import { usePropertyStore, type CachedQuery } from '../stores/property';
+import type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
 
-console.log("[Properties.vue] Component setup.");
-
+const store = usePropertyStore();
 const isFilterModalVisible = ref(false);
 const filtersApplied = ref(false);
 const currentFilters = ref<any>(null);
-const { documents, loading, error, hasMore, loadMoreDocuments } = useInfiniteScroll('properties');
+const documents = ref<DocumentData[]>([]);
+const loading = ref(false);
+const error = ref<string | null>(null);
+const hasMore = ref(true);
+const lastDoc = ref<QueryDocumentSnapshot<DocumentData> | null>(null);
+
+const generateQueryKey = (filters: any) => {
+  return `properties_${JSON.stringify(filters || {})}`;
+};
+
+const loadProperties = async (filters: any, fromCache = false) => {
+  const queryKey = generateQueryKey(filters);
+
+  if (fromCache) {
+    const cachedData = store.getCachedQuery(queryKey);
+    if (cachedData) {
+      documents.value = cachedData.documents;
+      lastDoc.value = cachedData.lastDoc;
+      hasMore.value = cachedData.hasMore;
+      filtersApplied.value = !!filters;
+      currentFilters.value = filters;
+      console.log(`[Properties.vue] Loaded properties from cache for key: ${queryKey}`);
+      return;
+    }
+  }
+
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const result = await store.fetchProperties({
+      collectionName: 'properties',
+      filters,
+      lastDoc: null
+    });
+    
+    documents.value = result.newDocuments;
+    lastDoc.value = result.newLastDoc;
+    hasMore.value = result.hasMore;
+
+    store.cacheQuery(queryKey, { documents: documents.value, lastDoc: lastDoc.value, hasMore: hasMore.value });
+    
+  } catch (e) {
+    error.value = 'Failed to load properties.';
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
+};
 
 const applyFilters = (filters: any) => {
-  console.log("[Properties.vue] Applying filters:", JSON.stringify(filters));
   currentFilters.value = filters;
-  loadMoreDocuments(filters);
-  isFilterModalVisible.value = false;
   filtersApplied.value = true;
+  isFilterModalVisible.value = false;
+  const queryKey = generateQueryKey(filters);
+  store.clearQueryCache(queryKey); // Clear previous results for this filter combination
+  loadProperties(filters);
 };
 
 const removeFilters = () => {
-  console.log("[Properties.vue] Removing filters.");
   currentFilters.value = null;
-  loadMoreDocuments(null); 
   filtersApplied.value = false;
+  loadProperties(null);
 };
 
-const loadMore = () => {
-  console.log("[Properties.vue] Loading more documents with filters:", JSON.stringify(currentFilters.value));
-  loadMoreDocuments(currentFilters.value);
+const loadMore = async () => {
+  if (!hasMore.value || loading.value) return;
+
+  loading.value = true;
+  try {
+    const result = await store.fetchProperties({
+      collectionName: 'properties',
+      filters: currentFilters.value,
+      lastDoc: lastDoc.value
+    });
+
+    documents.value.push(...result.newDocuments);
+    lastDoc.value = result.newLastDoc;
+    hasMore.value = result.hasMore;
+
+    const queryKey = generateQueryKey(currentFilters.value);
+    store.cacheQuery(queryKey, { documents: documents.value, lastDoc: lastDoc.value, hasMore: hasMore.value });
+
+  } catch (e) {
+    error.value = 'Failed to load more properties.';
+    console.error(e);
+  } finally {
+    loading.value = false;
+  }
 };
+
+onMounted(() => {
+  // Try to load from cache first on mount
+  loadProperties(currentFilters.value, true);
+});
+
 </script>
 
 <style scoped>
