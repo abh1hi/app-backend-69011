@@ -1,5 +1,16 @@
 import { defineStore } from 'pinia';
-import type { DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { 
+  collection, 
+  query, 
+  where, 
+  orderBy, 
+  startAfter, 
+  limit, 
+  getDocs, 
+  type DocumentData, 
+  type QueryDocumentSnapshot 
+} from 'firebase/firestore';
+import { db } from '../firebase';
 
 interface MediaItem {
   file: File;
@@ -14,10 +25,17 @@ interface CachedQuery {
   hasMore: boolean;
 }
 
+interface FetchPropertiesOptions {
+  collectionName: string;
+  ownerId?: string | null;
+  filters?: any;
+  lastDoc?: QueryDocumentSnapshot<DocumentData> | null;
+}
+
 export const usePropertyStore = defineStore('property', {
   state: () => ({
     property: {
-      basic: { propertyType: '', saleOrRent: '', title: '', description: '', location: '', size: null, bedrooms: null, bathrooms: null, floor: '', age: '' },
+      basic: { propertyType: '', saleOrRent: '', title: '', description: '', location: '', state: '', size: null, bedrooms: null, bathrooms: null, floor: '', age: '' },
       pricing: { price: null, maintenance: '', deposit: '', paymentTerms: '' },
       features: { furnishing: '', parking: '', security: '', amenities: [] as string[] },
       media: { photos: [] as MediaItem[], videos: [] as MediaItem[] },
@@ -31,12 +49,11 @@ export const usePropertyStore = defineStore('property', {
       features: false,
       media: false,
       contact: false,
-legal: false
+      legal: false
     },
-    // Caching state for queries (lists of properties)
     cachedQueries: {} as Record<string, CachedQuery>,
-    // Caching state for individual properties
-    cachedProperties: {} as Record<string, DocumentData>
+    cachedProperties: {} as Record<string, DocumentData>,
+    availableStates: [] as string[]
   }),
   actions: {
     updateProperty<T extends PropertySection>(this: any, section: T, data: Partial<typeof this.property[T]>) {
@@ -64,8 +81,6 @@ legal: false
     resetState() {
       this.$reset();
     },
-
-    // Caching actions for queries
     addCachedDocuments(queryKey: string, newDocs: DocumentData[], lastDoc: QueryDocumentSnapshot<DocumentData> | null, hasMore: boolean) {
       const existingQuery = this.cachedQueries[queryKey];
       if (existingQuery) {
@@ -73,11 +88,7 @@ legal: false
         existingQuery.lastDoc = lastDoc;
         existingQuery.hasMore = hasMore;
       } else {
-        this.cachedQueries[queryKey] = {
-          documents: newDocs,
-          lastDoc,
-          hasMore
-        };
+        this.cachedQueries[queryKey] = { documents: newDocs, lastDoc, hasMore };
       }
     },
     getCachedQuery(queryKey: string): CachedQuery | undefined {
@@ -90,13 +101,84 @@ legal: false
     clearQueryCache(queryKey: string) {
       delete this.cachedQueries[queryKey];
     },
-
-    // Caching actions for individual properties
     cacheProperty(propertyId: string, propertyData: DocumentData) {
       this.cachedProperties[propertyId] = propertyData;
     },
     getCachedProperty(propertyId: string): DocumentData | undefined {
       return this.cachedProperties[propertyId];
+    },
+    async fetchProperties(options: FetchPropertiesOptions) {
+      const { collectionName, ownerId, filters, lastDoc } = options;
+      const collectionRef = collection(db, collectionName);
+      const queryParts: any[] = [];
+
+      if (ownerId) {
+        queryParts.push(where('ownerId', '==', ownerId));
+      }
+
+      if (filters) {
+        if (filters.saleOrRent) {
+          queryParts.push(where('basic.saleOrRent', '==', filters.saleOrRent));
+        }
+        if (filters.state) {
+          queryParts.push(where('basic.state', '==', filters.state));
+        }
+
+        // Handle price range filter and ordering
+        if (filters.priceRange && (filters.priceRange[0] > 0 || filters.priceRange[1] < 1000000)) {
+          queryParts.push(where('pricing.price', '>=', filters.priceRange[0]));
+          queryParts.push(where('pricing.price', '<=', filters.priceRange[1]));
+          // Firestore requires ordering by the field used in inequality filters.
+          queryParts.push(orderBy('pricing.price', 'desc'));
+        } else {
+          // Default sort order when not filtering by price.
+          queryParts.push(orderBy('createdAt', 'desc'));
+        }
+      } else {
+         // Default sort order if no filters at all.
+         queryParts.push(orderBy('createdAt', 'desc'));
+      }
+
+      queryParts.push(orderBy('__name__', 'desc'));
+
+      if (lastDoc) {
+        queryParts.push(startAfter(lastDoc));
+      }
+
+      queryParts.push(limit(10));
+
+      const q = query(collectionRef, ...queryParts);
+      const querySnapshot = await getDocs(q);
+
+      const newDocuments = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
+      const hasMore = querySnapshot.docs.length === 10;
+
+      return { newDocuments, newLastDoc, hasMore };
+    },
+    async fetchAvailableStates() {
+      if (this.availableStates.length > 0) {
+        return;
+      }
+
+      try {
+        const querySnapshot = await getDocs(collection(db, 'properties'));
+        const states = new Set<string>();
+        
+        querySnapshot.forEach((doc) => {
+          const propertyData = doc.data();
+          const state = propertyData?.basic?.state;
+          if (state && typeof state === 'string' && state.trim() !== '') {
+            states.add(state);
+          }
+        });
+        
+        this.availableStates = Array.from(states).sort();
+
+      } catch (error) {
+        console.error("Error fetching available states:", error);
+        this.availableStates = []; // Clear on error to prevent inconsistent state
+      }
     }
   }
 });

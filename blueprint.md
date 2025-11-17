@@ -14,7 +14,6 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **Quick Actions:** A set of quick action buttons for easy access to key features.
     *   **Featured Properties:** A grid of featured properties fetched from Cloud Firestore.
     *   **Mobile-First Design:** The home page is optimized for a native-like experience on mobile devices, with a compact layout, responsive components, and polished styles.
-    *   **Ui Inspiration:** The UI is inpisre by IOS 14 Cocoa Touch and Android 16 Material UI. It is a blend of both.
 *   **My Properties Page:** A dedicated page for users to view and manage their own property listings.
 *   **Dashboard (`Profile.vue`):**
     *   **User Profile Section:** Displays the user's full name and phone number.
@@ -26,6 +25,13 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **Detailed Information:** Displays the property's title, location, price, size, bedrooms, bathrooms, description, and amenities.
     *   **Contact Card:** A card with the agent's contact information and a "Request Info" button.
     *   **Mobile-Optimized UI:** The page is fully responsive and optimized for a great user experience on mobile devices.
+*   **Property Filtering:**
+    *   **Modal UI:** The filter options are presented in a `FormModal` for a consistent and clean user experience.
+    *   **`FilterProperties.vue` Component:** A reusable component for filtering properties.
+    *   **Filter Options:** Users can filter properties by "For Sale" or "For Rent", a price range, and by state.
+    *   **Dynamic State Filtering:** The "State" dropdown in the filter modal is now dynamically populated with only the states that are available in the database, providing a better user experience.
+    *   **Firestore Backend Filtering:** The filtering logic is implemented on the backend using Firestore queries for efficient data retrieval.
+    *   **Centralized Store Logic:** A new `fetchProperties` action in the `property` store handles all property fetching, including filtering and pagination.
 *   **Authentication:**
     *   **Firebase Phone Authentication:** Users can sign up or log in using their phone number and a one-time password (OTP) sent via SMS.
 *   **Routing:** Client-side routing with `vue-router`, including protected routes.
@@ -47,6 +53,7 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **Firebase SDK v9:** The latest modular Firebase SDK is used for improved performance and code maintainability.
     *   **Firebase Storage:** Media files (photos and videos) are uploaded to Firebase Storage.
     *   **Cloud Firestore:** Property data, including media URLs and the owner's ID, is saved to Cloud Firestore.
+    *   **Firestore Indexes:** Defined a comprehensive set of composite indexes in `firestore.indexes.json` to support all current and future filtering and sorting combinations, including by `state` and `location`.
 *   **Reusable Components:**
     *   **`PropertySearch.vue`:** A search bar component for the hero section.
     *   **`QuickActions.vue`:** A component for the quick action buttons.
@@ -56,9 +63,10 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **`FormModal.vue`:** A reusable modal component with a "Save" button for a better user experience.
 *   **Smoother Android Navigation:** Optimized the Android back button behavior by removing an unnecessary `setTimeout` delay in `src/main.ts`. This makes the navigation feel more responsive and native.
 
-## Current Task: Optimize Android Back Button Navigation
+## Current Task: Add Location Index
 
 ### Plan
 
-1.  **Optimize Back Button Logic:** Removed the `setTimeout` and simplified the logic in `src/main.ts` for a more responsive back button.
-2.  **Update Blueprint:** Documented the navigation improvement in the `blueprint.md` file.
+1.  **Update `firestore.indexes.json`:** Added new index definitions to `firestore.indexes.json` to support querying by `location`, in combination with other filters.
+2.  **Deploy Indexes:** Provided the user with the command to deploy the updated indexes to their Firebase project.
+3.  **Update Blueprint:** Documented the index update in the `blueprint.md` file.

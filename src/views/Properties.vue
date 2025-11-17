@@ -2,7 +2,14 @@
   <div class="properties-page">
     <div class="page-header">
       <h1 class="page-title">Available Properties</h1>
+      <button @click="isFilterModalVisible = true" class="filter-button">Filter</button>
     </div>
+
+    <FilterProperties 
+      :isVisible="isFilterModalVisible" 
+      @close="isFilterModalVisible = false"
+      @apply-filters="applyFilters" 
+    />
 
     <div v-if="error" class="error-state">
       <p>{{ error }}</p>
@@ -17,7 +24,7 @@
     </div>
 
     <div v-if="!loading && documents.length === 0 && !error" class="empty-state">
-      <p>No properties found. Add one to get started!</p>
+      <p>No properties found. Try adjusting your filters.</p>
     </div>
 
     <div v-if="hasMore && !loading" class="load-more-container">
@@ -27,10 +34,21 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import PropertyCard from '../components/PropertyCard.vue';
+import FilterProperties from '../components/FilterProperties.vue';
 import { useInfiniteScroll } from '../composables/useInfiniteScroll';
+import { usePropertyStore } from '../stores/property';
 
+const isFilterModalVisible = ref(false);
 const { documents, loading, error, hasMore, loadMoreDocuments } = useInfiniteScroll('properties');
+const propertyStore = usePropertyStore();
+
+const applyFilters = (filters: any) => {
+  propertyStore.clearCache('properties'); // Clear existing results
+  loadMoreDocuments(filters);
+  isFilterModalVisible.value = false;
+};
 
 const loadMore = () => {
   loadMoreDocuments();
@@ -53,7 +71,9 @@ const loadMore = () => {
 }
 
 .page-header {
-  text-align: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 2rem;
   padding-top: 1rem;
 }
@@ -69,13 +89,24 @@ const loadMore = () => {
   font-weight: 800;
   color: var(--text-primary);
   letter-spacing: -0.03em;
-  margin-bottom: 0.5rem;
 }
 
 @media (min-width: 768px) {
   .page-title {
     font-size: 2.75rem;
   }
+}
+
+.filter-button {
+  background: linear-gradient(135deg, var(--primary-blue), #0051d5);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .properties-grid {
