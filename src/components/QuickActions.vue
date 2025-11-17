@@ -5,8 +5,7 @@
         <div class="icon-wrapper">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-8"/><path d="M5 14H2.5a2.5 2.5 0 0 1 0-5H5"/><path d="M21.5 9H19a2.5 2.5 0 0 0 0 5h2.5"/><path d="M19 14v8"/><path d="M5 22v-8"/><path d="M12 2v2"/><path d="M12 8v2"/><path d="M12 14v2"/><circle cx="12" cy="12" r="2"/><path d="M18 12h2"/><path d="M4 12H2"/></svg>
         </div>
-        <h3 class="action-title">Add Property</h3>
-        <p class="action-subtitle">List your property for sale or rent.</p>
+        <h3 class="action-title">Post Property</h3>
       </router-link>
 
       <router-link to="/my-properties" class="action-card">
@@ -14,167 +13,104 @@
          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H2"/><path d="M18 12h4"/><path d="M12 6V2"/><path d="M12 22v-4"/><path d="M12 12v-2"/></svg>
         </div>
         <h3 class="action-title">My Properties</h3>
-        <p class="action-subtitle">View and manage your listings.</p>
       </router-link>
 
-      <router-link to="/all-properties" class="action-card">
+      <router-link to="/properties" class="action-card">
         <div class="icon-wrapper">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         </div>
-        <h3 class="action-title">Explore Properties</h3>
-        <p class="action-subtitle">Browse all available listings.</p>
+        <h3 class="action-title">All Properties</h3>
       </router-link>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-// No script logic needed for this component yet.
+// No script logic needed
 </script>
 
 <style scoped>
 .quick-actions-container {
-  padding: 2rem 1rem;
-  background: transparent;
-}
-
-@media (min-width: 768px) {
-  .quick-actions-container {
-    padding: 3rem 1.5rem;
-  }
+  padding: 2.5rem 1rem;
+  background: var(--background-color-soft);
 }
 
 .actions-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  max-width: 1200px;
+  display: flex;
+  justify-content: space-around;
+  max-width: 1000px;
   margin: 0 auto;
-}
-
-@media (min-width: 768px) {
-  .actions-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
+  gap: 1rem;
 }
 
 .action-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  padding: 24px 16px;
-  border-radius: 18px;
-  text-align: center;
-  text-decoration: none;
-  color: var(--text-primary);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  position: relative;
-  overflow: hidden;
-  border: 0.5px solid rgba(255, 255, 255, 0.8);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: var(--text-primary);
+  padding: 1rem 0.5rem;
+  border-radius: 16px;
+  transition: all 0.25s ease-out;
 }
 
-.action-card:active {
-  transform: scale(0.96);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-}
-
-@media (min-width: 768px) {
-  .action-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
+.action-card:hover {
+  background: rgba(0, 122, 255, 0.05);
+  transform: translateY(-2px);
 }
 
 .icon-wrapper {
-  height: 56px;
-  width: 56px;
-  background: var(--primary-blue);
-  border-radius: 16px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
-  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.25);
-  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  color: var(--primary-blue);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: all 0.25s ease-out;
 }
 
-.action-card:active .icon-wrapper {
-  transform: scale(0.95);
-}
-
-@media (min-width: 768px) {
-  .action-card:hover .icon-wrapper {
-    transform: scale(1.05);
-    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.35);
-  }
+.action-card:hover .icon-wrapper {
+  background: var(--primary-blue);
+  color: var(--white);
+  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.25);
+  transform: rotate(-10deg);
 }
 
 .icon-wrapper svg {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
+  transition: transform 0.25s ease-out;
+}
+
+.action-card:hover .icon-wrapper svg {
+  transform: scale(1.1);
 }
 
 .action-title {
   font-size: 0.875rem;
   font-weight: 600;
-  margin: 0;
-  letter-spacing: -0.2px;
-  line-height: 1.3;
-}
-
-@media (min-width: 768px) {
-  .action-title {
-    font-size: 1.0625rem;
-  }
-}
-
-.action-subtitle {
-  font-size: 0.8125rem;
-  color: var(--text-secondary);
-  line-height: 1.4;
-  margin: 0;
-  opacity: 0.7;
-  display: none;
-}
-
-@media (min-width: 1024px) {
-  .action-subtitle {
-    display: block;
-  }
+  text-align: center;
 }
 
 @media (max-width: 640px) {
   .quick-actions-container {
-    padding: 1.5rem 1rem;
+    padding: 2rem 1rem;
   }
-
-  .actions-grid {
-    gap: 10px;
-  }
-
-  .action-card {
-    padding: 20px 12px;
-  }
-
   .icon-wrapper {
-    height: 48px;
-    width: 48px;
+    width: 52px;
+    height: 52px;
   }
-
   .icon-wrapper svg {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
   }
-
   .action-title {
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
   }
 }
 </style>
-

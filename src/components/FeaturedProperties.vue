@@ -1,6 +1,7 @@
 <template>
   <div class="featured-properties-container">
     <h2 class="section-title">Featured Properties</h2>
+    <p class="section-subtitle">Handpicked properties by our team</p>
     <div v-if="loading && documents.length === 0" class="loading-state">
       <div class="spinner"></div>
       <p>Loading properties...</p>
@@ -38,36 +39,47 @@ const loadMore = () => {
 
 <style scoped>
 .featured-properties-container {
-  padding: 2rem 1rem;
-  background: transparent;
+  padding: 2.5rem 1rem;
+  background: var(--background-color-soft);
 }
 
 @media (min-width: 768px) {
   .featured-properties-container {
-    padding: 3rem 1.5rem;
+    padding: 4rem 1.5rem;
   }
 }
 
 .section-title {
   text-align: center;
-  font-size: 1.75rem;
-  font-weight: 700;
+  font-size: 1.875rem;
+  font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 2rem;
-  letter-spacing: -0.5px;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.6px;
+}
+
+.section-subtitle {
+  text-align: center;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 2.5rem;
+  font-weight: 400;
 }
 
 @media (min-width: 768px) {
   .section-title {
-    font-size: 2.25rem;
-    margin-bottom: 2.5rem;
+    font-size: 2.5rem;
+  }
+  .section-subtitle {
+    font-size: 1.125rem;
+    margin-bottom: 3rem;
   }
 }
 
 .properties-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.25rem;
+  gap: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -75,7 +87,7 @@ const loadMore = () => {
 @media (min-width: 640px) {
   .properties-grid {
     grid-template-columns: repeat(2, 1fr);
-    gap: 1.5rem;
+    gap: 1.75rem;
   }
 }
 

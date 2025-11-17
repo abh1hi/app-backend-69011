@@ -7,6 +7,7 @@ import AddProperty from '../views/AddProperty.vue';
 import PreviewProperty from '../views/PreviewProperty.vue';
 import MyProperties from '../views/MyProperties.vue';
 import PropertyDetails from '../views/PropertyDetails.vue';
+import SearchResults from '../views/SearchResults.vue';
 
 const routes = [
   {
@@ -29,6 +30,11 @@ const routes = [
     path: '/properties',
     name: 'Properties',
     component: Properties
+  },
+   {
+    path: '/search',
+    name: 'SearchResults',
+    component: SearchResults
   },
   {
     path: '/property/:id',
