@@ -125,91 +125,167 @@ const verifyOtp = async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 80vh;
-  background-color: var(--background-color-soft);
+  min-height: 100vh;
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
+  padding: 1.5rem;
 }
 
 .auth-container {
   width: 100%;
   max-width: 420px;
-  padding: 3rem 2.5rem;
+  padding: 2rem 1.5rem;
   text-align: center;
   background-color: var(--white);
-  border-radius: 24px;
-  box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+  border-radius: 32px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 122, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+@media (min-width: 640px) {
+  .auth-container {
+    padding: 3rem 2.5rem;
+  }
 }
 
 .auth-title {
-  font-size: 2.2rem;
+  font-size: 1.875rem;
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.75rem;
+  letter-spacing: -0.03em;
+}
+
+@media (min-width: 640px) {
+  .auth-title {
+    font-size: 2.25rem;
+    margin-bottom: 1rem;
+  }
 }
 
 .auth-subtitle {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   color: var(--text-secondary);
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+@media (min-width: 640px) {
+  .auth-subtitle {
+    font-size: 1rem;
+    margin-bottom: 2.5rem;
+  }
 }
 
 .input-group {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .input-group input {
   width: 100%;
-  padding: 1rem;
+  padding: 12px 14px;
   border-radius: 12px;
-  border: 1px solid var(--card-border-light);
-  background-color: var(--background-color-soft);
-  font-size: 1rem;
+  border: 1.5px solid rgba(0, 122, 255, 0.15);
+  background-color: rgba(0, 122, 255, 0.02);
+  font-size: 16px;
   color: var(--text-primary);
-  transition: all 0.3s ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  min-height: 44px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+@media (min-width: 768px) {
+  .input-group input {
+    padding: 14px 16px;
+    min-height: 48px;
+    font-size: 1rem;
+    border-radius: 14px;
+  }
 }
 
 .input-group input:focus {
   outline: none;
   border-color: var(--primary-blue);
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+  background-color: var(--white);
+  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+}
+
+.input-group input::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.6;
 }
 
 .error-message {
   color: #ff3b30;
   margin-bottom: 1rem;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  padding: 0.75rem;
+  background: rgba(255, 59, 48, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 59, 48, 0.2);
 }
 
 .auth-button {
   width: 100%;
-  padding: 1rem;
+  padding: 1rem 1.5rem;
   border: none;
-  border-radius: 12px;
-  background: linear-gradient(45deg, var(--primary-blue), #00c6ff);
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--primary-blue), #0051d5);
   color: var(--white);
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 6px 20px rgba(0, 122, 255, 0.2);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+  letter-spacing: 0.02em;
+  min-height: 52px;
 }
 
-.auth-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 122, 255, 0.3);
+.auth-button:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+@media (min-width: 768px) {
+  .auth-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
+  }
 }
 
 .toggle-auth {
   margin-top: 2rem;
   color: var(--primary-blue);
   cursor: pointer;
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: 0.75rem;
+  border-radius: 12px;
+  transition: all 0.2s;
+  display: inline-block;
+}
+
+.toggle-auth:active {
+  background: rgba(0, 122, 255, 0.1);
+  transform: scale(0.98);
+}
+
+@media (min-width: 768px) {
+  .toggle-auth:hover {
+    background: rgba(0, 122, 255, 0.1);
+  }
 }
 
 #recaptcha-container {
   margin: 1.5rem auto;
   display: flex;
   justify-content: center;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 </style>

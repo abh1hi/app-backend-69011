@@ -34,123 +34,147 @@
 
 <style scoped>
 .quick-actions-container {
-  padding: 2.5rem 1rem;
-  background-color: var(--background-color-soft);
+  padding: 2rem 1rem;
+  background: transparent;
+}
+
+@media (min-width: 768px) {
+  .quick-actions-container {
+    padding: 3rem 1.5rem;
+  }
 }
 
 .actions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
+@media (min-width: 768px) {
+  .actions-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+}
+
 .action-card {
-  background-color: var(--white);
-  padding: 2rem 1.5rem;
-  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  padding: 24px 16px;
+  border-radius: 18px;
   text-align: center;
   text-decoration: none;
   color: var(--text-primary);
-  box-shadow: 0 10px 40px rgba(0,0,0,0.05);
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   position: relative;
   overflow: hidden;
+  border: 0.5px solid rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
 }
 
-.action-card:before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(0, 122, 255, 0.1), transparent 40%);
-  transform: scale(0);
-  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
-  z-index: 1;
+.action-card:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
-.action-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 45px rgba(0,0,0,0.1);
-}
-
-.action-card:hover:before {
-  transform: scale(1);
+@media (min-width: 768px) {
+  .action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
 }
 
 .icon-wrapper {
-  height: 70px;
-  width: 70px;
-  margin: 0 auto 1.5rem;
-  background: linear-gradient(135deg, var(--primary-blue), #00c6ff);
-  border-radius: 50%;
+  height: 56px;
+  width: 56px;
+  background: var(--primary-blue);
+  border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--white);
-  box-shadow: 0 8px 20px rgba(0, 122, 255, 0.3);
-  position: relative;
-  z-index: 2;
+  color: white;
+  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.25);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.action-card:active .icon-wrapper {
+  transform: scale(0.95);
+}
+
+@media (min-width: 768px) {
+  .action-card:hover .icon-wrapper {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 122, 255, 0.35);
+  }
 }
 
 .icon-wrapper svg {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
 }
 
 .action-title {
-  font-size: 1.3rem;
-  font-weight: 700;
-  margin-bottom: 0.5rem;
-  position: relative;
-  z-index: 2;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.2px;
+  line-height: 1.3;
+}
+
+@media (min-width: 768px) {
+  .action-title {
+    font-size: 1.0625rem;
+  }
 }
 
 .action-subtitle {
-  font-size: 0.95rem;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
-  line-height: 1.5;
-   position: relative;
-  z-index: 2;
+  line-height: 1.4;
+  margin: 0;
+  opacity: 0.7;
+  display: none;
 }
 
-@media (max-width: 768px) {
+@media (min-width: 1024px) {
+  .action-subtitle {
+    display: block;
+  }
+}
+
+@media (max-width: 640px) {
   .quick-actions-container {
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
   }
 
   .actions-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    gap: 10px;
   }
 
   .action-card {
-    padding: 1.5rem 0.5rem;
-    background: none;
-    box-shadow: none;
-  }
-
-  .action-card:hover {
-    transform: none;
-    box-shadow: none;
+    padding: 20px 12px;
   }
 
   .icon-wrapper {
-    height: 60px;
-    width: 60px;
-    margin-bottom: 1rem;
-  }
-  
-  .action-title {
-    font-size: 0.85rem;
-    font-weight: 600;
+    height: 48px;
+    width: 48px;
   }
 
-  .action-subtitle {
-    display: none;
+  .icon-wrapper svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .action-title {
+    font-size: 0.75rem;
   }
 }
 </style>
+

@@ -43,7 +43,6 @@ const selectOption = (option: string) => {
 </script>
 
 <style scoped>
-
 .picker-overlay {
   position: fixed;
   top: 0;
@@ -51,21 +50,37 @@ const selectOption = (option: string) => {
   width: 100%;
   height: 100%;
   background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   justify-content: center;
   align-items: flex-end;
   z-index: 2000;
+  animation: fade-in 0.3s;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .picker-container {
   width: 100%;
   max-width: 500px;
-  background: var(--background-color);
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
+  max-height: 70vh;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
   transform: translateY(100%);
   transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 -5px 30px rgba(0,0,0,0.1);
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.15);
+  border: 0.5px solid rgba(255, 255, 255, 0.8);
+  border-bottom: none;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .picker-container.is-visible {
@@ -76,14 +91,17 @@ const selectOption = (option: string) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e9ecef;
+  padding: 20px 24px;
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .picker-title {
-  font-size: 1.2rem;
+  font-size: 1.125rem;
   font-weight: 600;
   color: var(--text-primary);
+  letter-spacing: -0.3px;
+  margin: 0;
 }
 
 .close-btn {
@@ -93,30 +111,53 @@ const selectOption = (option: string) => {
   font-weight: 600;
   color: var(--primary-blue);
   cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s;
+  letter-spacing: -0.2px;
+}
+
+.close-btn:active {
+  background: rgba(0, 122, 255, 0.1);
+  transform: scale(0.95);
+}
+
+.picker-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .picker-body ul {
   list-style: none;
-  padding: 0;
+  padding: 8px 0;
   margin: 0;
-  max-height: 40vh;
-  overflow-y: auto;
 }
 
 .picker-option {
-  padding: 1.2rem 1.5rem;
+  padding: 16px 24px;
   text-align: center;
-  font-size: 1.1rem;
+  font-size: 1.0625rem;
+  font-weight: 400;
   cursor: pointer;
-  border-bottom: 1px solid #e9ecef;
-  transition: background-color 0.2s;
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.2s;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
 }
 
-.picker-option:hover {
-  background-color: var(--primary-blue-light);
+.picker-option:active {
+  background: rgba(0, 122, 255, 0.08);
+  transform: scale(0.98);
 }
 
 .picker-option:last-child {
   border-bottom: none;
+}
+
+@media (min-width: 768px) {
+  .picker-option:hover {
+    background: rgba(0, 122, 255, 0.06);
+  }
 }
 </style>

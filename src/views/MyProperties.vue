@@ -56,25 +56,53 @@ const loadMore = () => {
 
 <style scoped>
 .my-properties-container {
-  padding: 3rem 1.5rem;
-  background-color: var(--background-color-soft);
+  padding: 1rem;
+  background: linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%);
   min-height: 100vh;
+}
+
+@media (min-width: 768px) {
+  .my-properties-container {
+    padding: 2rem 1.5rem;
+  }
 }
 
 .section-title {
   text-align: center;
-  font-size: 2.5rem;
+  font-size: 1.875rem;
   font-weight: 800;
   color: var(--text-primary);
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
+  letter-spacing: -0.03em;
+  padding-top: 1rem;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 2.5rem;
+    margin-bottom: 3rem;
+  }
 }
 
 .properties-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 2rem;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
   max-width: 1400px;
   margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .properties-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .properties-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
 }
 
 .loading-state, .error-state, .empty-state {
@@ -88,13 +116,13 @@ const loadMore = () => {
 }
 
 .spinner {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--primary-blue);
+  border: 3px solid rgba(0, 122, 255, 0.1);
+  border-top: 3px solid var(--primary-blue);
   border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
+  width: 48px;
+  height: 48px;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 1.5rem;
 }
 
 @keyframes spin {
@@ -103,39 +131,73 @@ const loadMore = () => {
 }
 
 .loading-state p, .error-state p, .empty-state p {
-  font-size: 1.1rem;
+  font-size: 1.125rem;
   color: var(--text-secondary);
   font-weight: 500;
   margin-bottom: 1.5rem;
 }
 
 .add-property-btn {
-  background: linear-gradient(45deg, var(--primary-blue), #00c6ff);
+  background: linear-gradient(135deg, var(--primary-blue), #0051d5);
   color: white;
-  padding: 0.8rem 2rem;
-  border-radius: 30px;
+  padding: 1rem 2rem;
+  border-radius: 16px;
   text-decoration: none;
-  font-weight: 600;
-  transition: all 0.3s ease;
+  font-weight: 700;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+  letter-spacing: 0.02em;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.add-property-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 122, 255, 0.25);
+.add-property-btn:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+@media (min-width: 768px) {
+  .add-property-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
+  }
 }
 
 .load-more-container {
   text-align: center;
-  margin-top: 2rem;
+  margin-top: 3rem;
+  padding: 2rem 0;
 }
 
 .load-more-button {
-  background-color: var(--primary-blue);
+  background: linear-gradient(135deg, var(--primary-blue), #0051d5);
   color: white;
   padding: 1rem 2.5rem;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+  letter-spacing: 0.02em;
+  min-height: 52px;
+  min-width: 160px;
+}
+
+.load-more-button:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+}
+
+@media (min-width: 768px) {
+  .load-more-button:hover {
+    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
+    transform: translateY(-2px);
+  }
 }
 
 </style>

@@ -36,35 +36,77 @@ const user = computed(() => userStore.user);
   position: fixed;
   bottom: 0;
   left: 0;
+  right: 0;
   width: 100%;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-top: 1px solid var(--card-border);
+  min-height: 64px;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
   display: flex;
   justify-content: space-around;
-  align-items: center;
+  align-items: flex-start;
   z-index: 100;
+  box-shadow: 0 -2px 20px rgba(0, 0, 0, 0.04);
+  /* Ensure content doesn't overlap with safe areas */
+  padding-top: 8px;
 }
 
 .nav-item {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   text-decoration: none;
-  color: var(--text-dark);
-  font-size: 0.75rem;
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 0.6875rem;
+  font-weight: 500;
   flex: 1;
-  padding: 0.5rem 0;
+  padding: 8px 4px;
+  gap: 4px;
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  position: relative;
+  min-height: 56px;
+  /* Account for safe area at bottom */
+  padding-bottom: calc(4px + env(safe-area-inset-bottom, 0) * 0.5);
+}
+
+.nav-item:active {
+  transform: scale(0.95);
 }
 
 .nav-item.router-link-active {
   color: var(--primary-blue);
 }
 
+.nav-item.router-link-active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 3px;
+  background: var(--primary-blue);
+  border-radius: 0 0 3px 3px;
+}
+
 .nav-item svg {
-  margin-bottom: 4px;
+  width: 24px;
+  height: 24px;
+  transition: transform 0.2s;
+}
+
+.nav-item.router-link-active svg {
+  transform: scale(1.1);
+}
+
+.nav-item span {
+  font-weight: 500;
+  letter-spacing: -0.1px;
 }
 
 @media (min-width: 768px) {
