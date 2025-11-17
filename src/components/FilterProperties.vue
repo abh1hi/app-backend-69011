@@ -1,3 +1,4 @@
+
 <template>
   <FormModal 
     :is-visible="isVisible" 
@@ -25,24 +26,16 @@
       </div>
 
       <div class="filter-group">
-        <label class="filter-label">Price Range</label>
+        <label class="filter-label">Price</label>
         <div class="price-range">
-          <span>${{ priceRange[0] }}</span>
+          <span>${{ price.toLocaleString() }}</span>
           <input
             type="range"
             min="0"
-            max="1000000"
+            :max="highestPrice"
             step="10000"
-            v-model.number="priceRange[0]"
+            v-model.number="price"
           />
-          <input
-            type="range"
-            min="0"
-            max="1000000"
-            step="10000"
-            v-model.number="priceRange[1]"
-          />
-          <span>${{ priceRange[1] }}</span>
         </div>
       </div>
 
@@ -70,17 +63,20 @@ const emit = defineEmits(['apply-filters', 'close']);
 const propertyStore = usePropertyStore();
 
 const saleOrRent = ref('sale');
-const priceRange = ref([0, 1000000]);
+const price = ref(0);
 const selectedState = ref('');
+const highestPrice = ref(50000000);
 
-onMounted(() => {
+onMounted(async () => {
   propertyStore.fetchAvailableStates();
+  highestPrice.value = await propertyStore.fetchHighestPrice();
+  price.value = highestPrice.value;
 });
 
 const applyFilters = () => {
   emit('apply-filters', {
     saleOrRent: saleOrRent.value,
-    priceRange: priceRange.value,
+    priceRange: [0, price.value],
     state: selectedState.value,
   });
 };

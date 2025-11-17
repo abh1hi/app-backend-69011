@@ -1,8 +1,12 @@
+
 <template>
   <div class="properties-page">
     <div class="page-header">
       <h1 class="page-title">Available Properties</h1>
-      <button @click="isFilterModalVisible = true" class="filter-button">Filter</button>
+      <div class="header-actions">
+        <button @click="isFilterModalVisible = true" class="filter-button">Filter</button>
+        <button v-if="filtersApplied" @click="removeFilters" class="remove-filter-button">Remove Filters</button>
+      </div>
     </div>
 
     <FilterProperties 
@@ -38,20 +42,32 @@ import { ref } from 'vue';
 import PropertyCard from '../components/PropertyCard.vue';
 import FilterProperties from '../components/FilterProperties.vue';
 import { useInfiniteScroll } from '../composables/useInfiniteScroll';
-import { usePropertyStore } from '../stores/property';
+
+console.log("[Properties.vue] Component setup.");
 
 const isFilterModalVisible = ref(false);
+const filtersApplied = ref(false);
+const currentFilters = ref<any>(null);
 const { documents, loading, error, hasMore, loadMoreDocuments } = useInfiniteScroll('properties');
-const propertyStore = usePropertyStore();
 
 const applyFilters = (filters: any) => {
-  propertyStore.clearCache('properties'); // Clear existing results
+  console.log("[Properties.vue] Applying filters:", JSON.stringify(filters));
+  currentFilters.value = filters;
   loadMoreDocuments(filters);
   isFilterModalVisible.value = false;
+  filtersApplied.value = true;
+};
+
+const removeFilters = () => {
+  console.log("[Properties.vue] Removing filters.");
+  currentFilters.value = null;
+  loadMoreDocuments(null); 
+  filtersApplied.value = false;
 };
 
 const loadMore = () => {
-  loadMoreDocuments();
+  console.log("[Properties.vue] Loading more documents with filters:", JSON.stringify(currentFilters.value));
+  loadMoreDocuments(currentFilters.value);
 };
 </script>
 
@@ -97,7 +113,12 @@ const loadMore = () => {
   }
 }
 
-.filter-button {
+.header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.filter-button, .remove-filter-button {
   background: linear-gradient(135deg, var(--primary-blue), #0051d5);
   color: white;
   padding: 0.75rem 1.5rem;
@@ -107,6 +128,10 @@ const loadMore = () => {
   border: none;
   cursor: pointer;
   transition: all 0.3s ease;
+}
+
+.remove-filter-button {
+  background: #e74c3c;
 }
 
 .properties-grid {

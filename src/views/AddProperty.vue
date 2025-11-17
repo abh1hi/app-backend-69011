@@ -64,42 +64,57 @@
        <div class="form-group">
         <label>Property Type</label>
         <input type="text" v-model="propertyStore.property.basic.propertyType" @click="openPicker('Property Type', ['Apartment', 'House', 'Commercial'], 'basic.propertyType')" readonly class="select-input">
+        <span v-if="basicErrors.propertyType" class="error-message">{{ basicErrors.propertyType }}</span>
       </div>
       <div class="form-group">
         <label>Sale or Rent</label>
         <input type="text" v-model="propertyStore.property.basic.saleOrRent" @click="openPicker('Sale or Rent', ['For Sale', 'For Rent'], 'basic.saleOrRent')" readonly class="select-input">
+        <span v-if="basicErrors.saleOrRent" class="error-message">{{ basicErrors.saleOrRent }}</span>
       </div>
       <div class="form-group">
         <label>Listing Title</label>
         <input type="text" v-model="propertyStore.property.basic.title">
+        <span v-if="basicErrors.title" class="error-message">{{ basicErrors.title }}</span>
       </div>
       <div class="form-group">
         <label>Detailed Description</label>
         <textarea v-model="propertyStore.property.basic.description"></textarea>
+        <span v-if="basicErrors.description" class="error-message">{{ basicErrors.description }}</span>
       </div>
        <div class="form-group">
         <label>Location/Address</label>
         <input type="text" v-model="propertyStore.property.basic.location">
+        <span v-if="basicErrors.location" class="error-message">{{ basicErrors.location }}</span>
+      </div>
+        <div class="form-group">
+        <label>State</label>
+        <input type="text" v-model="propertyStore.property.basic.state" @click="openPicker('State', propertyStore.availableStates, 'basic.state')" readonly class="select-input">
+        <span v-if="basicErrors.state" class="error-message">{{ basicErrors.state }}</span>
       </div>
       <div class="form-group">
         <label>Property Size (sq. ft.)</label>
         <input type="number" v-model.number="propertyStore.property.basic.size">
+        <span v-if="basicErrors.size" class="error-message">{{ basicErrors.size }}</span>
       </div>
       <div class="form-group">
         <label>Number of Bedrooms</label>
         <input type="number" v-model.number="propertyStore.property.basic.bedrooms">
+        <span v-if="basicErrors.bedrooms" class="error-message">{{ basicErrors.bedrooms }}</span>
       </div>
       <div class="form-group">
         <label>Number of Bathrooms</label>
         <input type="number" v-model.number="propertyStore.property.basic.bathrooms">
+        <span v-if="basicErrors.bathrooms" class="error-message">{{ basicErrors.bathrooms }}</span>
       </div>
        <div class="form-group">
         <label>Floor Level</label>
         <input type="text" v-model="propertyStore.property.basic.floor">
+        <span v-if="basicErrors.floor" class="error-message">{{ basicErrors.floor }}</span>
       </div>
       <div class="form-group">
         <label>Age of Property</label>
         <input type="text" v-model="propertyStore.property.basic.age">
+        <span v-if="basicErrors.age" class="error-message">{{ basicErrors.age }}</span>
       </div>
     </FormModal>
 
@@ -238,7 +253,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, reactive } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePropertyStore } from '../stores/property';
 import OptionPicker from '../components/OptionPicker.vue';
@@ -264,12 +279,29 @@ const pickerTitle = ref('');
 const pickerOptions = ref<string[]>([]);
 const activePickerField = ref<string | null>(null);
 
+const basicErrors = reactive({
+  propertyType: '',
+  saleOrRent: '',
+  title: '',
+  description: '',
+  location: '',
+  state: '',
+  size: '',
+  bedrooms: '',
+  bathrooms: '',
+  floor: '',
+  age: ''
+});
+
 const allSectionsCompleted = computed(() => {
   return Object.values(propertyStore.completedSections).every(Boolean);
 });
 
 const openSection = (section: PropertySection) => {
-  if (section === 'basic') isBasicModalVisible.value = true;
+  if (section === 'basic') {
+    propertyStore.fetchAvailableStates();
+    isBasicModalVisible.value = true;
+  }
   else if (section === 'pricing') isPricingModalVisible.value = true;
   else if (section === 'features') isFeaturesModalVisible.value = true;
   else if (section === 'media') isMediaModalVisible.value = true;
@@ -277,14 +309,77 @@ const openSection = (section: PropertySection) => {
   else if (section === 'legal') isLegalModalVisible.value = true;
 };
 
+const validateBasicSection = () => {
+  const basic = propertyStore.property.basic;
+  let isValid = true;
+
+  Object.keys(basicErrors).forEach(key => {
+    basicErrors[key as keyof typeof basicErrors] = '';
+  });
+
+  if (!basic.propertyType) {
+    basicErrors.propertyType = 'Property type is required.';
+    isValid = false;
+  }
+  if (!basic.saleOrRent) {
+    basicErrors.saleOrRent = 'Please specify if the property is for sale or rent.';
+    isValid = false;
+  }
+  if (!basic.title) {
+    basicErrors.title = 'Listing title is required.';
+    isValid = false;
+  }
+  if (!basic.description) {
+    basicErrors.description = 'Detailed description is required.';
+    isValid = false;
+  }
+  if (!basic.location) {
+    basicErrors.location = 'Location/Address is required.';
+    isValid = false;
+  }
+  if (!basic.state) {
+    basicErrors.state = 'State is required.';
+    isValid = false;
+  }
+  if (!basic.size || basic.size <= 0) {
+    basicErrors.size = 'Valid property size is required.';
+    isValid = false;
+  }
+    if (!basic.bedrooms || basic.bedrooms <= 0) {
+    basicErrors.bedrooms = 'Valid number of bedrooms is required.';
+    isValid = false;
+  }
+    if (!basic.bathrooms || basic.bathrooms <= 0) {
+    basicErrors.bathrooms = 'Valid number of bathrooms is required.';
+    isValid = false;
+  }
+    if (!basic.floor) {
+    basicErrors.floor = 'Floor level is required.';
+    isValid = false;
+  }
+    if (!basic.age) {
+    basicErrors.age = 'Age of property is required.';
+    isValid = false;
+  }
+
+  return isValid;
+};
+
+
 const saveSection = (section: PropertySection) => {
-  propertyStore.setSectionCompleted(section, true);
-  if (section === 'basic') isBasicModalVisible.value = false;
-  else if (section === 'pricing') isPricingModalVisible.value = false;
-  else if (section === 'features') isFeaturesModalVisible.value = false;
-  else if (section === 'media') isMediaModalVisible.value = false;
-  else if (section === 'contact') isContactModalVisible.value = false;
-  else if (section === 'legal') isLegalModalVisible.value = false;
+  if (section === 'basic') {
+    if (validateBasicSection()) {
+      propertyStore.setSectionCompleted(section, true);
+      isBasicModalVisible.value = false;
+    }
+  } else {
+    propertyStore.setSectionCompleted(section, true);
+    if (section === 'pricing') isPricingModalVisible.value = false;
+    else if (section === 'features') isFeaturesModalVisible.value = false;
+    else if (section === 'media') isMediaModalVisible.value = false;
+    else if (section === 'contact') isContactModalVisible.value = false;
+    else if (section === 'legal') isLegalModalVisible.value = false;
+  }
 };
 
 const openPicker = (title: string, options: string[], field: string) => {
@@ -338,6 +433,12 @@ const previewProperty = () => {
   padding: 1rem;
   background: linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%);
   min-height: 100vh;
+}
+
+.error-message {
+  color: red;
+  font-size: 0.8rem;
+  margin-top: 4px;
 }
 
 @media (min-width: 768px) {
