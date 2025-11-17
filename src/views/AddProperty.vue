@@ -125,7 +125,7 @@
       @save="saveSection('pricing')"
     >
       <div class="form-group">
-        <label>Price (USD)</label>
+        <label>Price (INR ₹)</label>
         <input type="number" v-model.number="propertyStore.property.pricing.price">
       </div>
       <div class="form-group">

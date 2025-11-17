@@ -6,7 +6,7 @@
         <img :src="mainImage" alt="Main property photo" class="hero-image" />
         <div class="image-overlay-gradient"></div>
         <div class="price-badge">
-          <span class="price-amount">${{ property.pricing?.price?.toLocaleString() }}</span>
+          <span class="price-amount">₹{{ property.pricing?.price?.toLocaleString() }}</span>
           <span class="price-label">{{ property.basic?.saleOrRent }}</span>
         </div>
       </div>

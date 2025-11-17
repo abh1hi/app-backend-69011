@@ -26,7 +26,7 @@
 
       <div class="card-footer">
         <p class="property-price">
-          ${{ property.pricing?.price ? property.pricing.price.toLocaleString() : 'N/A' }}
+          ₹{{ property.pricing?.price ? property.pricing.price.toLocaleString() : 'N/A' }}
         </p>
         <button class="details-btn">View Details</button>
       </div>

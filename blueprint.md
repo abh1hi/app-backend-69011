@@ -47,7 +47,7 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **Firebase Storage:** Media files (photos and videos) are uploaded to Firebase Storage.
     *   **Cloud Firestore:** Property data is saved to Cloud Firestore.
 
-## Current Task: Create Search Results Page
+## Current Task: Change currency to INR
 
 ### Plan
 
