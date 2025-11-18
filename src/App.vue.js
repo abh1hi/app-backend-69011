@@ -1,12 +1,12 @@
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import Sidebar from './components/Sidebar.vue';
 import BottomNav from './components/BottomNav.vue';
-import { useUserStore } from './stores/user';
+import { useAuth } from './composables/useAuth';
 const isSidebarOpen = ref(false);
-const userStore = useUserStore();
 const router = useRouter();
 const transitionName = ref('slide-forward');
+const { user, googleSignIn, signOut } = useAuth();
 // Track navigation direction for animations
 router.beforeEach((to, from) => {
     const toDepth = to.path.split('/').length;
@@ -32,9 +32,6 @@ router.beforeEach((to, from) => {
             transitionName.value = 'fade';
         }
     }
-});
-onMounted(() => {
-    userStore.listenForAuthStateChanges();
 });
 debugger; /* PartiallyEnd: #3632/scriptSetup.vue */
 const __VLS_ctx = {};
@@ -124,25 +121,22 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.d
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
     ...{ class: "user-profile" },
 });
-__VLS_asFunctionalElement(__VLS_intrinsicElements.svg, __VLS_intrinsicElements.svg)({
-    xmlns: "http://www.w3.org/2000/svg",
-    width: "28",
-    height: "28",
-    viewBox: "0 0 24 24",
-    fill: "none",
-    stroke: "currentColor",
-    'stroke-width': "2",
-    'stroke-linecap': "round",
-    'stroke-linejoin': "round",
-});
-__VLS_asFunctionalElement(__VLS_intrinsicElements.path, __VLS_intrinsicElements.path)({
-    d: "M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2",
-});
-__VLS_asFunctionalElement(__VLS_intrinsicElements.circle, __VLS_intrinsicElements.circle)({
-    cx: "12",
-    cy: "7",
-    r: "4",
-});
+if (!__VLS_ctx.user) {
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
+        ...{ onClick: (__VLS_ctx.googleSignIn) },
+    });
+}
+if (__VLS_ctx.user) {
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.img)({
+        src: (__VLS_ctx.user.photoUrl || ''),
+        alt: "User Profile",
+        ...{ class: "profile-pic" },
+    });
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
+        ...{ onClick: (__VLS_ctx.signOut) },
+    });
+}
 __VLS_asFunctionalElement(__VLS_intrinsicElements.main, __VLS_intrinsicElements.main)({
     ...{ class: "main-content" },
 });
@@ -197,6 +191,7 @@ if (__VLS_ctx.isSidebarOpen) {
 /** @type {__VLS_StyleScopedClasses['hamburger-menu']} */ ;
 /** @type {__VLS_StyleScopedClasses['header-title']} */ ;
 /** @type {__VLS_StyleScopedClasses['user-profile']} */ ;
+/** @type {__VLS_StyleScopedClasses['profile-pic']} */ ;
 /** @type {__VLS_StyleScopedClasses['main-content']} */ ;
 /** @type {__VLS_StyleScopedClasses['overlay']} */ ;
 var __VLS_dollars;
@@ -207,6 +202,9 @@ const __VLS_self = (await import('vue')).defineComponent({
             BottomNav: BottomNav,
             isSidebarOpen: isSidebarOpen,
             transitionName: transitionName,
+            user: user,
+            googleSignIn: googleSignIn,
+            signOut: signOut,
         };
     },
 });
