@@ -11,24 +11,28 @@
 
       <div class="property-specs">
         <div class="spec-item">
-          <span class="spec-icon">🛏️</span>
+          <span class="spec-icon">&#128719;️</span>
           <span>{{ property.basic?.bedrooms || 'N/A' }} Beds</span>
         </div>
         <div class="spec-item">
-          <span class="spec-icon">🛁</span>
+          <span class="spec-icon">&#128705;</span>
           <span>{{ property.basic?.bathrooms || 'N/A' }} Baths</span>
         </div>
         <div class="spec-item">
-          <span class="spec-icon">📏</span>
+          <span class="spec-icon">&#128207;</span>
           <span>{{ property.basic?.size || 'N/A' }} sqft</span>
         </div>
       </div>
 
       <div class="card-footer">
-        <p class="property-price">
+         <p class="property-price">
           ₹{{ property.pricing?.price ? property.pricing.price.toLocaleString() : 'N/A' }}
         </p>
-        <button class="details-btn">View Details</button>
+        <div v-if="showOwnerActions" class="owner-actions">
+          <button @click.stop="onEdit" class="edit-btn">Edit</button>
+          <button @click.stop="onDelete" class="delete-btn">Delete</button>
+        </div>
+        <button v-else class="details-btn">View Details</button>
       </div>
     </div>
   </div>
@@ -41,13 +45,28 @@ const props = defineProps({
   property: {
     type: Object,
     required: true
+  },
+  showOwnerActions: {
+    type: Boolean,
+    default: false
   }
 });
 
+const emit = defineEmits(['edit', 'delete']);
 const router = useRouter();
 
 const viewDetails = () => {
-  router.push({ name: 'PropertyDetails', params: { id: props.property.id } });
+  if (!props.showOwnerActions) {
+    router.push({ name: 'PropertyDetails', params: { id: props.property.id } });
+  }
+};
+
+const onEdit = () => {
+  emit('edit', props.property.id);
+};
+
+const onDelete = () => {
+  emit('delete', props.property.id);
 };
 </script>
 
@@ -197,10 +216,8 @@ const viewDetails = () => {
   flex: 1;
 }
 
-.details-btn {
-  background: rgba(0, 122, 255, 0.1);
+.details-btn, .edit-btn, .delete-btn {
   border: none;
-  color: var(--primary-blue);
   padding: 10px 18px;
   border-radius: 12px;
   font-size: 0.875rem;
@@ -210,9 +227,23 @@ const viewDetails = () => {
   white-space: nowrap;
 }
 
-.details-btn:active {
+.details-btn:active, .edit-btn:active, .delete-btn:active {
   transform: scale(0.96);
-  background: rgba(0, 122, 255, 0.15);
+}
+
+.details-btn {
+  background: rgba(0, 122, 255, 0.1);
+  color: var(--primary-blue);
+}
+
+.edit-btn {
+  background: rgba(255, 149, 0, 0.1);
+  color: #FF9500;
+}
+
+.delete-btn {
+  background: rgba(255, 59, 48, 0.1);
+  color: #FF3B30;
 }
 
 @media (min-width: 768px) {
@@ -221,5 +252,21 @@ const viewDetails = () => {
     color: white;
     box-shadow: 0 4px 12px rgba(0, 122, 255, 0.25);
   }
+  .edit-btn:hover {
+    background: #FF9500;
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 149, 0, 0.25);
+  }
+  .delete-btn:hover {
+    background: #FF3B30;
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 59, 48, 0.25);
+  }
 }
+
+.owner-actions {
+    display: flex;
+    gap: 8px;
+}
+
 </style>

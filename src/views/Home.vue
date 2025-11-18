@@ -1,6 +1,9 @@
 <template>
   <div class="home-container">
     <div class="hero-section">
+      <transition-group name="fade" tag="div" class="hero-background">
+        <div v-for="(image, index) in images" :key="index" v-show="index === currentImageIndex" class="hero-image" :style="{ backgroundImage: `url(${image})` }"></div>
+      </transition-group>
       <div class="hero-overlay"></div>
       <div class="hero-content">
         <h1 class="hero-title">Find Your Dream Home</h1>
@@ -16,9 +19,30 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue';
 import HomeSearch from '../components/HomeSearch.vue';
 import QuickActions from '../components/QuickActions.vue';
 import FeaturedProperties from '../components/FeaturedProperties.vue';
+
+const images = ref([
+  'https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2592&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2670&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=2670&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1605146769289-440113cc3d00?q=80&w=2670&auto=format&fit=crop',
+]);
+
+const currentImageIndex = ref(0);
+let intervalId: any = null;
+
+onMounted(() => {
+  intervalId = setInterval(() => {
+    currentImageIndex.value = (currentImageIndex.value + 1) % images.value.length;
+  }, 5000); // Change image every 5 seconds
+});
+
+onUnmounted(() => {
+  clearInterval(intervalId);
+});
 </script>
 
 <style scoped>
@@ -32,15 +56,38 @@ import FeaturedProperties from '../components/FeaturedProperties.vue';
   height: 60vh;
   min-height: 450px;
   max-height: 700px;
-  background-image: url('https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=2592&auto=format&fit=crop');
-  background-size: cover;
-  background-position: center;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   overflow: hidden;
   padding: 1rem;
+}
+
+.hero-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: opacity 1s ease-in-out;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1.5s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 
 .hero-overlay {

@@ -8,6 +8,7 @@ import PreviewProperty from '../views/PreviewProperty.vue';
 import MyProperties from '../views/MyProperties.vue';
 import PropertyDetails from '../views/PropertyDetails.vue';
 import SearchResults from '../views/SearchResults.vue';
+import EditProperty from '../views/EditProperty.vue';
 
 const routes = [
   {
@@ -45,6 +46,12 @@ const routes = [
     path: '/add-property',
     name: 'AddProperty',
     component: AddProperty,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/edit-property/:id',
+    name: 'EditProperty',
+    component: EditProperty,
     meta: { requiresAuth: true }
   },
   {

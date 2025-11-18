@@ -81,15 +81,35 @@
         <textarea v-model="propertyStore.property.basic.description"></textarea>
         <span v-if="basicErrors.description" class="error-message">{{ basicErrors.description }}</span>
       </div>
-       <div class="form-group">
-        <label>Location/Address</label>
-        <input type="text" v-model="propertyStore.property.basic.location">
-        <span v-if="basicErrors.location" class="error-message">{{ basicErrors.location }}</span>
+      
+            <div class="form-group">
+          <label>Location/Address</label>
+          <LocationPicker v-if="isMapsApiLoaded" @location-selected="handleLocationSelected" />
+           <div v-else class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading maps...</p>
+          </div>
+          <span v-if="basicErrors.location" class="error-message">{{ basicErrors.location }}</span>
+          <div v-if="isCheckingDuplicates" class="checking-message">
+            Verifying address...
+          </div>
       </div>
-        <div class="form-group">
+
+
+      <div class="form-group">
         <label>State</label>
-        <input type="text" v-model="propertyStore.property.basic.state" @click="openPicker('State', propertyStore.availableStates, 'basic.state')" readonly class="select-input">
+        <input type="text" v-model="propertyStore.property.basic.state" readonly class="select-input-display">
         <span v-if="basicErrors.state" class="error-message">{{ basicErrors.state }}</span>
+      </div>
+       <div class="form-group">
+        <label>City</label>
+        <input type="text" v-model="propertyStore.property.basic.city" readonly class="select-input-display">
+         <span v-if="basicErrors.city" class="error-message">{{ basicErrors.city }}</span>
+      </div>
+      <div class="form-group">
+        <label>Pincode</label>
+        <input type="text" v-model="propertyStore.property.basic.pincode" readonly class="select-input-display">
+         <span v-if="basicErrors.pincode" class="error-message">{{ basicErrors.pincode }}</span>
       </div>
       <div class="form-group">
         <label>Property Size (sq. ft.)</label>
@@ -125,7 +145,7 @@
       @save="saveSection('pricing')"
     >
       <div class="form-group">
-        <label>Price (INR ₹)</label>
+        <label>Price (₹INR)</label>
         <input type="number" v-model.number="propertyStore.property.pricing.price">
       </div>
       <div class="form-group">
@@ -258,9 +278,27 @@ import { useRouter } from 'vue-router';
 import { usePropertyStore } from '../stores/property';
 import OptionPicker from '../components/OptionPicker.vue';
 import FormModal from '../components/FormModal.vue';
+import LocationPicker from '../components/LocationPicker.vue';
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase";
+import { useGoogleMaps } from '../composables/useGoogleMaps';
+
+
+
+
+interface LocationData {
+  address: string;
+  placeId: string;
+  city: string;
+  state: string;
+  pincode: string;
+}
 
 const router = useRouter();
 const propertyStore = usePropertyStore();
+const { isLoaded: isMapsApiLoaded } = useGoogleMaps();
+
+
 
 const allAmenities = ['Gym', 'Pool', 'Garden', 'Lift'];
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -278,6 +316,9 @@ const isPickerVisible = ref(false);
 const pickerTitle = ref('');
 const pickerOptions = ref<string[]>([]);
 const activePickerField = ref<string | null>(null);
+const selectedLocation = ref<LocationData | null>(null);
+const duplicateError = ref('');
+const isCheckingDuplicates = ref(false);
 
 const basicErrors = reactive({
   propertyType: '',
@@ -286,6 +327,8 @@ const basicErrors = reactive({
   description: '',
   location: '',
   state: '',
+  city: '',
+  pincode: '',
   size: '',
   bedrooms: '',
   bathrooms: '',
@@ -333,12 +376,26 @@ const validateBasicSection = () => {
     basicErrors.description = 'Detailed description is required.';
     isValid = false;
   }
-  if (!basic.location) {
-    basicErrors.location = 'Location/Address is required.';
+
+if (!selectedLocation.value?.placeId) {
+ basicErrors.location = 'Please select a valid location from the map search.';
     isValid = false;
-  }
+}
+if (duplicateError.value) {
+    basicErrors.location = duplicateError.value; // Show duplicate error
+    isValid = false;
+}
+
   if (!basic.state) {
     basicErrors.state = 'State is required.';
+    isValid = false;
+  }
+   if (!basic.city) {
+    basicErrors.city = 'City is required.';
+    isValid = false;
+  }
+  if (!basic.pincode) {
+    basicErrors.pincode = 'Pincode is required.';
     isValid = false;
   }
   if (!basic.size || basic.size <= 0) {
@@ -421,7 +478,57 @@ const handleFileChange = (event: Event) => {
 };
 
 const previewProperty = () => {
+  console.log('--- 3. Previewing Property ---');
+  if (selectedLocation.value?.placeId) {
+    const finalPlaceId = selectedLocation.value.placeId;
+    console.log('Storing this placeId in the data store:', finalPlaceId);
+    propertyStore.setPropertyId(finalPlaceId);
+  } else {
+    console.warn('Warning: Cannot set property ID in store because no location with a placeId is selected.');
+  }
   router.push({ name: 'PreviewProperty' });
+};
+
+
+const handleLocationSelected = async (location: LocationData) => {
+  selectedLocation.value = location;
+  
+  // Update the store with the new, detailed location info
+  propertyStore.updateProperty('basic', {
+    location: location.address,
+    state: location.state,
+    city: location.city,
+    pincode: location.pincode
+  });
+
+  duplicateError.value = ''; // Clear previous error
+  await checkForDuplicate();
+};
+
+const checkForDuplicate = async () => {
+  if (!selectedLocation.value?.placeId) {
+    return;
+  }
+  isCheckingDuplicates.value = true;
+  duplicateError.value = '';
+  
+  const placeIdForCheck = selectedLocation.value.placeId;
+
+  try {
+    const docRef = doc(db, "properties", placeIdForCheck);
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      duplicateError.value = 'Error: This property address already exists in your listings.';
+    } else {
+      // It's all good, no duplicate found
+    }
+  } catch (error) {
+    console.error("Error during duplicate check in Firestore:", error);
+    duplicateError.value = 'An error occurred while checking the address.';
+  } finally {
+    isCheckingDuplicates.value = false;
+  }
 };
 
 </script>
@@ -582,6 +689,11 @@ const previewProperty = () => {
   border: none;
   min-height: 56px;
 }
+.checking-message {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-top: 8px;
+}
 
 .submit-btn:active {
   transform: scale(0.98);
@@ -654,6 +766,7 @@ const previewProperty = () => {
   gap: 12px;
   margin-bottom: 24px;
 }
+
 
 .form-group {
   margin-bottom: 1.5rem;

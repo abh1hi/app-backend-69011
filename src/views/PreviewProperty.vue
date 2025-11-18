@@ -81,7 +81,7 @@ import { useRouter } from 'vue-router';
 import { usePropertyStore } from '../stores/property';
 import { getAuth } from 'firebase/auth';
 import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getFirestore, collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 interface MediaItem {
   file: File;
@@ -103,6 +103,14 @@ const submitProperty = async () => {
     return;
   }
 
+  const propertyId = propertyStore.propertyId;
+  if (!propertyId) {
+    alert('Error: A unique property ID was not found. Cannot submit.');
+    console.error('Submission failed: propertyId is null or undefined in the store.');
+    isLoading.value = false;
+    return;
+  }
+
   try {
     propertyStore.setOwnerId(user.uid);
 
@@ -112,7 +120,7 @@ const submitProperty = async () => {
     // Upload photos
     const photoUrls = await Promise.all(
       propertyStore.property.media.photos.map(async (photo: MediaItem) => {
-        const photoRef = storageRef(storage, `properties/${user.uid}/${Date.now()}_${photo.file.name}`);
+        const photoRef = storageRef(storage, `properties/${propertyId}/${Date.now()}_${photo.file.name}`);
         await uploadBytes(photoRef, photo.file);
         return await getDownloadURL(photoRef);
       })
@@ -121,7 +129,7 @@ const submitProperty = async () => {
     // Upload videos
     const videoUrls = await Promise.all(
       propertyStore.property.media.videos.map(async (video: MediaItem) => {
-        const videoRef = storageRef(storage, `properties/${user.uid}/${Date.now()}_${video.file.name}`);
+        const videoRef = storageRef(storage, `properties/${propertyId}/${Date.now()}_${video.file.name}`);
         await uploadBytes(videoRef, video.file);
         return await getDownloadURL(videoRef);
       })
@@ -132,13 +140,18 @@ const submitProperty = async () => {
       mediaUrls: { photos: photoUrls, videos: videoUrls },
       createdAt: serverTimestamp()
     };
-    delete (propertyData as any).media; 
+    // Clean up unnecessary data before saving
+    delete (propertyData as any).media;
+    delete (propertyData as any).propertyId; 
 
-    await addDoc(collection(firestore, 'properties'), propertyData);
+    // Use setDoc with the specific placeId to create the document
+    const propertyRef = doc(firestore, 'properties', propertyId);
+    await setDoc(propertyRef, propertyData);
 
     alert('Property submitted successfully!');
-    propertyStore.resetState();
-    router.push('/');
+    propertyStore.resetState(); // Clear the form data
+    router.push('/'); // Navigate to home page
+
   } catch (error) {
     console.error('Error submitting property:', error);
     alert('An error occurred while submitting the property. Please try again.');

@@ -19,7 +19,10 @@
         <PropertyCard 
           v-for="property in documents" 
           :key="property.id" 
-          :property="property" 
+          :property="property"
+          :show-owner-actions="true"
+          @edit="handleEdit"
+          @delete="handleDelete"
         />
       </div>
       <div v-if="loading" class="loading-indicator">
@@ -42,11 +45,15 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 import { useUserStore } from '../stores/user';
+import { usePropertyStore } from '../stores/property';
 import { useInfiniteScroll } from '../composables/useInfiniteScroll';
 import PropertyCard from '../components/PropertyCard.vue';
 
 const userStore = useUserStore();
+const propertyStore = usePropertyStore();
+const router = useRouter();
 const user = computed(() => userStore.user);
 
 const ownerId = computed(() => user.value?.uid || null);
@@ -56,10 +63,30 @@ const { documents, loading, error, hasMore, loadMoreDocuments } = useInfiniteScr
 
 const handleLogout = async () => {
   await userStore.logout();
+  router.push('/'); // Redirect to home after logout
 };
 
 const loadMore = () => {
   loadMoreDocuments();
+};
+
+const handleEdit = (propertyId: string) => {
+  router.push({ name: 'EditProperty', params: { id: propertyId } });
+};
+
+const handleDelete = async (propertyId: string) => {
+  if (confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
+    try {
+      // This action will be created in the property store
+      await propertyStore.deleteProperty(propertyId);
+      // Refresh the list after deletion
+      documents.value = documents.value.filter(p => p.id !== propertyId);
+      alert('Property deleted successfully.');
+    } catch (err) {
+      console.error("Error deleting property:", err);
+      alert('Failed to delete property.');
+    }
+  }
 };
 </script>
 

@@ -7,11 +7,16 @@ import {
   startAfter,
   limit,
   getDocs,
+  doc,
+  deleteDoc,
+  getDoc,
+  updateDoc, 
   type DocumentData,
   type QueryDocumentSnapshot,
   type QueryConstraint
 } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, storage } from '../firebase';
+import { ref as storageRef, deleteObject, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 interface MediaItem {
   file: File;
@@ -36,8 +41,9 @@ interface FetchPropertiesOptions {
 
 export const usePropertyStore = defineStore('property', {
   state: () => ({
+    propertyId: null as string | null, // To hold the ID for the new property being created
     property: {
-      basic: { propertyType: '', saleOrRent: '', title: '', description: '', location: '', state: '', size: null, bedrooms: null, bathrooms: null, floor: '', age: '' },
+      basic: { propertyType: '', saleOrRent: '', title: '', description: '', location: '', state: '', city: '', pincode: '', size: null, bedrooms: null, bathrooms: null, floor: '', age: '' },
       pricing: { price: null, maintenance: '', deposit: '', paymentTerms: '' },
       features: { furnishing: '', parking: '', security: '', amenities: [] as string[] },
       media: { photos: [] as MediaItem[], videos: [] as MediaItem[] },
@@ -61,6 +67,9 @@ export const usePropertyStore = defineStore('property', {
     lowestSqft: 0
   }),
   actions: {
+    setPropertyId(id: string) {
+      this.propertyId = id;
+    },
     updateProperty<T extends PropertySection>(this: any, section: T, data: Partial<typeof this.property[T]>) {
       this.property[section] = { ...this.property[section], ...data };
     },
@@ -117,11 +126,15 @@ export const usePropertyStore = defineStore('property', {
     },
 
     async fetchProperties(options: FetchPropertiesOptions) {
-      const { collectionName, filters, lastDoc } = options;
+      const { collectionName, ownerId, filters, lastDoc } = options;
       const collectionRef = collection(db, collectionName);
       const queryConstraints: QueryConstraint[] = [];
 
       // --- Build Server-Side Query --- 
+      if (ownerId) {
+        queryConstraints.push(where('ownerId', '==', ownerId));
+      }
+      
       if (filters) {
         if (filters.saleOrRent) {
           queryConstraints.push(where('basic.saleOrRent', '==', filters.saleOrRent));
@@ -196,6 +209,105 @@ export const usePropertyStore = defineStore('property', {
         throw error;
       }
     },
+
+    async deleteProperty(propertyId: string) {
+      console.log(`[PropertyStore] Initiating deletion for property: ${propertyId}`);
+      const docRef = doc(db, 'properties', propertyId);
+
+      try {
+        // Get the document to retrieve media URLs before deleting
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const propertyData = docSnap.data();
+          const mediaUrls = propertyData.mediaUrls || {};
+
+          // Delete Firestore document
+          await deleteDoc(docRef);
+          console.log(`[PropertyStore] Successfully deleted Firestore document: ${propertyId}`);
+
+          // Delete associated media from Firebase Storage
+          const deletePromises: Promise<void>[] = [];
+          
+          if (mediaUrls.photos && mediaUrls.photos.length > 0) {
+            mediaUrls.photos.forEach((url: string) => {
+              const photoRef = storageRef(storage, url);
+              deletePromises.push(deleteObject(photoRef));
+            });
+          }
+
+          if (mediaUrls.videos && mediaUrls.videos.length > 0) {
+            mediaUrls.videos.forEach((url: string) => {
+              const videoRef = storageRef(storage, url);
+              deletePromises.push(deleteObject(videoRef));
+            });
+          }
+
+          await Promise.all(deletePromises);
+          console.log(`[PropertyStore] Successfully deleted all associated media for property: ${propertyId}`);
+
+          // Clear caches
+          delete this.cachedProperties[propertyId];
+          this.clearCache(); // Clear all query caches as they are now stale
+
+        } else {
+          console.warn(`[PropertyStore] Property with ID ${propertyId} not found for deletion.`);
+        }
+      } catch (error) {
+        console.error(`[PropertyStore] Error during deletion of property ${propertyId}:`, error);
+        throw error;
+      }
+    },
+    
+    async updatePropertyWithMedia(
+      propertyId: string,
+      updatedData: DocumentData,
+      mediaChanges: { newFiles: File[], deletedUrls: string[] }
+    ) {
+      const docRef = doc(db, "properties", propertyId);
+
+      try {
+        // 1. Delete media marked for removal
+        const deletePromises = mediaChanges.deletedUrls.map(url => {
+          const oldRef = storageRef(storage, url);
+          return deleteObject(oldRef);
+        });
+        await Promise.all(deletePromises);
+
+        // 2. Upload new files
+        const uploadPromises = mediaChanges.newFiles.map(async file => {
+          const newRef = storageRef(storage, `properties/${propertyId}/${file.name}`);
+          await uploadBytes(newRef, file);
+          return getDownloadURL(newRef);
+        });
+        const newUrls = await Promise.all(uploadPromises);
+
+        // 3. Get current data and merge media URLs
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+          throw new Error("Property not found");
+        }
+        const existingData = docSnap.data();
+        const existingUrls = existingData.mediaUrls || { photos: [], videos: [] };
+
+        // Filter out deleted URLs and add new ones
+        const updatedPhotos = (existingUrls.photos || []).filter((url:string) => !mediaChanges.deletedUrls.includes(url));
+        // This assumes new files are photos for simplicity. Adjust if handling videos differently.
+        updatedData['mediaUrls.photos'] = [...updatedPhotos, ...newUrls];
+
+        // 4. Update Firestore
+        await updateDoc(docRef, updatedData);
+
+        // 5. Invalidate cache
+        delete this.cachedProperties[propertyId];
+        this.clearCache();
+
+        console.log("[PropertyStore] Property updated successfully with media changes.");
+      } catch (error) {
+        console.error("[PropertyStore] Error updating property with media:", error);
+        throw error;
+      }
+    },
+
 
     async fetchHighestPrice(): Promise<number> {
         try {

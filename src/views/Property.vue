@@ -65,7 +65,7 @@
         <h2 class="section-title">Pricing and Financial Details</h2>
         <div class="form-grid">
             <div class="form-group">
-                <label for="price">Price/Rent Amount</label>
+                <label for="price">Price/Rent Amount ₹</label>
                 <input type="number" id="price" v-model="property.price">
             </div>
             <div class="form-group">

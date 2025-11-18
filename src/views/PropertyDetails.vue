@@ -192,15 +192,16 @@ onMounted(async () => {
     const docRef = doc(db, "properties", propertyId);
     const docSnap = await getDoc(docRef);
 
-    if (docSnap.exists()) {
+       if (docSnap.exists()) {
       const propertyData = docSnap.data();
       property.value = { id: docSnap.id, ...propertyData } as Property;
       // Cache the newly fetched data
-      propertyStore.cacheProperty(propertyId, propertyData);
+      propertyStore.cacheProperty(property.value);
       console.log(`[Cache] Stored property '${propertyId}' in cache.`);
     } else {
       console.error("No such document!");
     }
+
   }
 });
 

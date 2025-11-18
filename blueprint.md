@@ -12,8 +12,9 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
 *   **Home Page:**
     *   **99acres Inspired Design:** A clean, modern layout inspired by the popular real estate portal 99acres.com, adapted to our existing UI kit.
     *   **Hero Section:** A prominent hero section with a background image and a new tabbed search interface.
+    *   **Dynamic Hero Section Slideshow:** The hero section now features a beautiful, automatic slideshow of property images that fade in and out.
     *   **Tabbed Search:** A detailed search bar allowing users to switch between "Buy" and "Rent" and search by city and budget.
-    *   **Quick Actions:** A set of quick action buttons for easy access to key features, redesigned to match the new layout.
+    *   **Quick Actions:** A set of quick action buttons for easy access to key features, redesigned to a new layout.
     *   **Featured Properties:** A grid of featured properties fetched from Cloud Firestore.
     *   **Mobile-First Design:** The home page is optimized for a native-like experience on mobile devices, with a compact layout, responsive components, and polished styles.
 *   **Search Results Page:**
@@ -46,12 +47,22 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **Firebase SDK v9:** The latest modular Firebase SDK is used for improved performance.
     *   **Firebase Storage:** Media files (photos and videos) are uploaded to Firebase Storage.
     *   **Cloud Firestore:** Property data is saved to Cloud Firestore.
+*   **Edit Property Page:**
+    *   **Modular Design:** The edit page is broken down into logical, collapsible sections using a new `EditSection.vue` component, making it much easier for users to navigate and find the information they need to update.
+    *   **Reusable Components:** The page reuses the same form components from the "Add Property" flow (`BasicInfo.vue`, `PricingInfo.vue`, etc.), making future updates and maintenance much more efficient.
+    *   **Full-Fledged Media Management:** Users can now delete existing photos and videos and upload new ones, a critical feature that was missing before.
+    *   **Robust Data Handling:** The new `updatePropertyWithMedia` action in the property store ensures that all data and media changes are saved to the database in a single, atomic operation.
+    *   **Disabled Location Fields:** The location, city, state, and pincode fields are now disabled in edit mode to prevent users from changing the property's location after it has been listed.
+    *   **Number Input Fix:** Added a `min="0"` attribute to number inputs to prevent negative values and fix a bug where empty fields would default to 0.
+    *   **Cancel Button:** A "Cancel" button has been added to the `EditProperty.vue` page, allowing users to discard their changes and navigate back to the previous page.
+*   **Google Maps API Logging:**
+    *   Added a `callback` function to the Google Maps API script in `index.html` to log a confirmation message to the console when the API is loaded.
 
-## Current Task: Change currency to INR
+## Current Task: Add Google Maps API Logging
 
 ### Plan
 
-1.  **Update `blueprint.md`**: Add the new search results page to the project blueprint.
-2.  **Create `src/views/SearchResults.vue`**: Create a new component to display search results.
-3.  **Update `src/router/index.ts`**: Add a new route for the search results page.
-4.  **Update `src/components/HomeSearch.vue`**: Add logic to navigate to the search results page on search.
+1.  **Add a callback function:** Create a new function `onGoogleMapsApiReady` in a `<script>` tag in the `<head>` of `index.html`.
+2.  **Update the script URL:** Add the `callback` parameter to the Google Maps API script URL, pointing to the `onGoogleMapsApiReady` function.
+3.  **Add `async` and `defer` attributes:** Ensure the script is loaded asynchronously and deferred until the page has finished parsing.
+4.  **Update Blueprint:** Document the new feature in the `blueprint.md` file.
