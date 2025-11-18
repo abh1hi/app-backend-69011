@@ -12,7 +12,6 @@
           <div class="input-group">
             <input type="tel" v-model="phoneNumber" placeholder="Phone Number (e.g., 9876543210)" required>
           </div>
-          <!-- reCAPTCHA container is no longer needed for native auth -->
           <p v-if="error" class="error-message">{{ error }}</p>
           <button type="submit" class="auth-button" :disabled="isLoading">
             <span v-if="!isLoading">Send Code</span>
@@ -43,11 +42,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getAuth, updateProfile } from 'firebase/auth';
-import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+import { getAuth, updateProfile, signInWithCredential, PhoneAuthProvider, type User } from 'firebase/auth';
+import { FirebaseAuthentication, type CodeSent } from '@capacitor-firebase/authentication';
 import { Capacitor } from '@capacitor/core';
+import type { PluginListenerHandle } from '@capacitor/core';
 
 const isLogin = ref(true);
 const name = ref('');
@@ -58,8 +58,29 @@ const error = ref('');
 const isLoading = ref(false);
 const router = useRouter();
 
-// This will store the verification ID from the native Firebase SDK
 const verificationId = ref<string | null>(null);
+const listeners: PluginListenerHandle[] = [];
+
+onMounted(() => {
+  if (Capacitor.isNativePlatform()) {
+    const codeSentListener = FirebaseAuthentication.addListener('codeSent', (result: CodeSent) => {
+      verificationId.value = result.verificationId;
+      otpSent.value = true;
+      isLoading.value = false;
+      error.value = '';
+    });
+    const verificationFailedListener = FirebaseAuthentication.addListener('verificationFailed', (err: any) => {
+      console.error('Capacitor Firebase Auth Error (verificationFailed):', err);
+      error.value = `Error sending code: ${err.message || 'An unknown error occurred.'}`;
+      isLoading.value = false;
+    });
+    listeners.push(codeSentListener, verificationFailedListener);
+  }
+});
+
+onUnmounted(() => {
+  listeners.forEach(listener => listener.remove());
+});
 
 const sendOtp = async () => {
   error.value = '';
@@ -70,7 +91,6 @@ const sendOtp = async () => {
     return;
   }
 
-  // Ensure this is running on a native platform
   if (!Capacitor.isNativePlatform()) {
     error.value = 'Phone authentication is only available on the native app.';
     isLoading.value = false;
@@ -80,16 +100,10 @@ const sendOtp = async () => {
   const formattedPhoneNumber = `+91${phoneNumber.value}`;
 
   try {
-    const result = await FirebaseAuthentication.signInWithPhoneNumber({
-      phoneNumber: formattedPhoneNumber,
-    });
-    verificationId.value = result.verificationId;
-    otpSent.value = true;
-    error.value = ''; // Clear previous errors
+    await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: formattedPhoneNumber });
   } catch (err: any) {
-    console.error('Capacitor Firebase Auth Error:', err);
-    error.value = `Error sending code: ${err.message || 'An unknown error occurred.'}`;
-  } finally {
+    console.error('Capacitor Firebase Auth Error (signInWithPhoneNumber):', err);
+    error.value = `Error sending code: ${err.message || 'Failed to initiate sign-in.'}`;
     isLoading.value = false;
   }
 };
@@ -109,31 +123,24 @@ const verifyOtp = async () => {
   }
 
   try {
-    // Use the verificationId and otp to create a credential
-    const result = await FirebaseAuthentication.signInWithCredential({
-      verificationId: verificationId.value,
-      verificationCode: otp.value,
-    });
+    const auth = getAuth();
+    const credential = PhoneAuthProvider.credential(verificationId.value, otp.value);
+    const result = await signInWithCredential(auth, credential);
+    const user = result.user as User;
 
-    const user = result.user;
     if (!user) {
       throw new Error("Authentication failed, no user returned.");
     }
     
-    // If signing up, update the user's profile with their name
-    if (!isLogin.value && name.value) {
-      const auth = getAuth();
-      if(auth.currentUser){
-         await updateProfile(auth.currentUser, { displayName: name.value });
-      }
+    if (!isLogin.value && name.value && auth.currentUser) {
+      await updateProfile(auth.currentUser, { displayName: name.value });
     }
 
-    // Reset state and navigate
     resetState();
     router.push('/dashboard');
 
   } catch (err: any) {
-    console.error('Capacitor Firebase Auth Error:', err);
+    console.error('Capacitor Firebase Auth Error (verifyOtp):', err);
     error.value = `Error verifying code: ${err.message || 'Invalid code or session.'}`;
   } finally {
     isLoading.value = false;
@@ -157,6 +164,7 @@ const toggleAuthMode = () => {
 </script>
 
 <style scoped>
+/* Styles remain the same */
 .auth-page {
   display: flex;
   justify-content: center;
