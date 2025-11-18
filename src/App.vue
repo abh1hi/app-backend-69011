@@ -8,10 +8,9 @@
         </button>
         <div class="header-title">Apna Aashiyanaa</div>
         <div class="user-profile">
-            <button v-if="!user" @click="googleSignIn">Sign in with Google</button>
             <div v-if="user">
-              <img :src="user.photoUrl || ''" alt="User Profile" class="profile-pic" />
-              <button @click="signOut">Sign Out</button>
+              <img :src="user.photoURL || ''" alt="User Profile" class="profile-pic" />
+              <button @click="handleLogout">Sign Out</button>
             </div>
         </div>
       </header>
@@ -29,16 +28,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import Sidebar from './components/Sidebar.vue';
 import BottomNav from './components/BottomNav.vue';
-import { useAuth } from './composables/useAuth';
+import { useUserStore } from './stores/user';
 
 const isSidebarOpen = ref(false);
 const router = useRouter();
 const transitionName = ref('slide-forward');
-const { user, googleSignIn, signOut } = useAuth();
+
+const userStore = useUserStore();
+const user = computed(() => userStore.user);
+
+onMounted(() => {
+  userStore.listenForAuthStateChanges();
+});
+
+onUnmounted(() => {
+  userStore.stopListeningForAuthStateChanges();
+});
+
+const handleLogout = async () => {
+  await userStore.logout();
+};
+
 
 // Track navigation direction for animations
 router.beforeEach((to, from) => {

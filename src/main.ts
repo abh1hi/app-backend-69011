@@ -13,10 +13,13 @@ const pinia = createPinia();
 app.use(router);
 app.use(pinia);
 
+// Mount the app immediately for a faster startup.
+app.mount('#app');
+
+// Load Google Maps in the background.
+// The composable will handle the loading state.
 const { load } = useGoogleMaps();
-load().then(() => {
-  app.mount('#app');
-});
+load();
 
 // Handle Android back button
 CapacitorApp.addListener('backButton', () => {

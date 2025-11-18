@@ -12,7 +12,7 @@
           <div class="input-group">
             <input type="tel" v-model="phoneNumber" placeholder="Phone Number" required>
           </div>
-          <div id="recaptcha-container"></div>
+          <div id="recaptcha-container" ref="recaptchaContainer"></div>
           <p v-if="error" class="error-message">{{ error }}</p>
           <button type="submit" class="auth-button">Send Code</button>
         </form>
@@ -37,11 +37,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, updateProfile } from 'firebase/auth';
+import { ref, onMounted, onUnmounted, nextTick } from 'vue';
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, updateProfile, type ConfirmationResult } from 'firebase/auth';
 import { useRouter } from 'vue-router';
-
-declare const grecaptcha: any;
 
 const isLogin = ref(true);
 const name = ref('');
@@ -50,23 +48,57 @@ const otp = ref('');
 const otpSent = ref(false);
 const error = ref('');
 const router = useRouter();
+
+// Template ref to get a direct reference to the DOM element
+const recaptchaContainer = ref<HTMLElement | null>(null);
 let recaptchaVerifier: RecaptchaVerifier | null = null;
-let confirmationResult: any;
+let confirmationResult: ConfirmationResult | null = null;
+
+const auth = getAuth();
+
+// This function handles the re-initialization logic
+const initializeRecaptcha = async () => {
+  // Wait for Vue to update the DOM
+  await nextTick();
+
+  // Only proceed if the container element exists and the verifier hasn't been created
+  if (recaptchaContainer.value && !recaptchaVerifier) {
+    try {
+      recaptchaVerifier = new RecaptchaVerifier(auth, recaptchaContainer.value, {
+        'size': 'normal',
+        'callback': () => {
+          // reCAPTCHA solved, clear any previous errors
+          error.value = '';
+        },
+        'expired-callback': () => {
+          // Response expired. Ask user to solve reCAPTCHA again.
+          error.value = "reCAPTCHA expired. Please solve it again.";
+        }
+      });
+      // Render the widget
+      await recaptchaVerifier.render();
+    } catch (e) {
+      console.error("reCAPTCHA render error:", e);
+      error.value = 'Failed to render reCAPTCHA. Please refresh the page.';
+    }
+  }
+};
+
+// This function safely tears down the reCAPTCHA widget
+const clearRecaptcha = () => {
+  if (recaptchaVerifier) {
+    recaptchaVerifier.clear();
+    recaptchaVerifier = null;
+  }
+};
 
 onMounted(() => {
-  const auth = getAuth();
-  // Render the reCAPTCHA widget
-  recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-    'size': 'normal', // Make the reCAPTCHA visible
-    'callback': () => {
-      // reCAPTCHA solved, you can enable the submit button if you want
-    },
-    'expired-callback': () => {
-      // Response expired. Ask user to solve reCAPTCHA again.
-      error.value = "reCAPTCHA expired. Please solve it again.";
-    }
-  });
-  recaptchaVerifier.render(); // Explicitly render the widget
+  initializeRecaptcha();
+});
+
+onUnmounted(() => {
+  // Clean up the widget when the component is destroyed
+  clearRecaptcha();
 });
 
 const sendOtp = async () => {
@@ -76,24 +108,23 @@ const sendOtp = async () => {
     return;
   }
 
-  // Assume Indian country code if not provided
-  const formattedPhoneNumber = `+91${phoneNumber.value}`;
-
-  const auth = getAuth();
+  // Ensure reCAPTCHA is ready before attempting to send an OTP
   if (!recaptchaVerifier) {
-    error.value = "reCAPTCHA not initialized.";
+    error.value = "reCAPTCHA is not ready. Please wait a moment.";
+    await initializeRecaptcha(); // Attempt to re-initialize
     return;
   }
+
+  const formattedPhoneNumber = `+91${phoneNumber.value}`;
 
   try {
     confirmationResult = await signInWithPhoneNumber(auth, formattedPhoneNumber, recaptchaVerifier);
     otpSent.value = true;
   } catch (err: any) {
-    error.value = `Error sending code: ${err.message}`;
-     // Reset reCAPTCHA if an error occurs to allow the user to try again
-    recaptchaVerifier.render().then((widgetId) => {
-      grecaptcha.reset(widgetId);
-    });
+    error.value = `Error sending OTP: ${err.message}`;
+    // Reset the reCAPTCHA on error so the user can try again
+    clearRecaptcha();
+    await initializeRecaptcha();
   }
 };
 
@@ -103,21 +134,37 @@ const verifyOtp = async () => {
     error.value = 'Please enter the 6-digit code.';
     return;
   }
+  if (!confirmationResult) {
+    error.value = 'Could not verify OTP. Please try sending the code again.';
+    return;
+  }
 
   try {
     const credential = await confirmationResult.confirm(otp.value);
     const user = credential.user;
-    
+
     if (!isLogin.value && name.value) {
+      // Update the user's profile with their name during sign-up
       await updateProfile(user, { displayName: name.value });
     }
-    
+
+    // Reset state after successful login/signup
+    phoneNumber.value = '';
+    name.value = '';
+    otp.value = '';
+    otpSent.value = false;
+
     router.push('/dashboard');
   } catch (err: any) {
     error.value = `Error verifying code: ${err.message}`;
+    // If the session expires, send the user back to the first step
+    if (err.code === 'auth/session-expired') {
+      otpSent.value = false;
+      clearRecaptcha();
+      await initializeRecaptcha();
+    }
   }
 };
-
 </script>
 
 <style scoped>
