@@ -1,12 +1,22 @@
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import Sidebar from './components/Sidebar.vue';
 import BottomNav from './components/BottomNav.vue';
-import { useAuth } from './composables/useAuth';
+import { useUserStore } from './stores/user';
 const isSidebarOpen = ref(false);
 const router = useRouter();
 const transitionName = ref('slide-forward');
-const { user, googleSignIn, signOut } = useAuth();
+const userStore = useUserStore();
+const user = computed(() => userStore.user);
+onMounted(() => {
+    userStore.listenForAuthStateChanges();
+});
+onUnmounted(() => {
+    userStore.stopListeningForAuthStateChanges();
+});
+const handleLogout = async () => {
+    await userStore.logout();
+};
 // Track navigation direction for animations
 router.beforeEach((to, from) => {
     const toDepth = to.path.split('/').length;
@@ -121,20 +131,15 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.d
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
     ...{ class: "user-profile" },
 });
-if (!__VLS_ctx.user) {
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
-        ...{ onClick: (__VLS_ctx.googleSignIn) },
-    });
-}
 if (__VLS_ctx.user) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
     __VLS_asFunctionalElement(__VLS_intrinsicElements.img)({
-        src: (__VLS_ctx.user.photoUrl || ''),
+        src: (__VLS_ctx.user.photoURL || ''),
         alt: "User Profile",
         ...{ class: "profile-pic" },
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
-        ...{ onClick: (__VLS_ctx.signOut) },
+        ...{ onClick: (__VLS_ctx.handleLogout) },
     });
 }
 __VLS_asFunctionalElement(__VLS_intrinsicElements.main, __VLS_intrinsicElements.main)({
@@ -203,8 +208,7 @@ const __VLS_self = (await import('vue')).defineComponent({
             isSidebarOpen: isSidebarOpen,
             transitionName: transitionName,
             user: user,
-            googleSignIn: googleSignIn,
-            signOut: signOut,
+            handleLogout: handleLogout,
         };
     },
 });

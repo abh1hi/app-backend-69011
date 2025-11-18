@@ -45,9 +45,8 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { getAuth, updateProfile, signInWithCredential, PhoneAuthProvider, type User } from 'firebase/auth';
-import { FirebaseAuthentication, type CodeSent } from '@capacitor-firebase/authentication';
-import { Capacitor } from '@capacitor/core';
-import type { PluginListenerHandle } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 
 const isLogin = ref(true);
 const name = ref('');
@@ -61,20 +60,24 @@ const router = useRouter();
 const verificationId = ref<string | null>(null);
 const listeners: PluginListenerHandle[] = [];
 
-onMounted(() => {
+onMounted(async () => {
   if (Capacitor.isNativePlatform()) {
-    const codeSentListener = FirebaseAuthentication.addListener('codeSent', (result: CodeSent) => {
-      verificationId.value = result.verificationId;
-      otpSent.value = true;
-      isLoading.value = false;
-      error.value = '';
-    });
-    const verificationFailedListener = FirebaseAuthentication.addListener('verificationFailed', (err: any) => {
-      console.error('Capacitor Firebase Auth Error (verificationFailed):', err);
-      error.value = `Error sending code: ${err.message || 'An unknown error occurred.'}`;
-      isLoading.value = false;
-    });
-    listeners.push(codeSentListener, verificationFailedListener);
+    try {
+      const phoneCodeSentListener = await FirebaseAuthentication.addListener('phoneCodeSent', (result: any) => {
+        if (result && result.verificationId) {
+          verificationId.value = result.verificationId;
+          otpSent.value = true;
+          isLoading.value = false;
+          error.value = '';
+        } else {
+          error.value = 'Failed to get verification ID. Please try again.';
+          isLoading.value = false;
+        }
+      });
+      listeners.push(phoneCodeSentListener);
+    } catch(e) {
+        console.error('Failed to add listener', e);
+    }
   }
 });
 

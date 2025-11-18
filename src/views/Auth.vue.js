@@ -1,72 +1,113 @@
-import { ref, onMounted } from 'vue';
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, updateProfile } from 'firebase/auth';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { getAuth, updateProfile, signInWithCredential, PhoneAuthProvider } from 'firebase/auth';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+import { Capacitor } from '@capacitor/core';
 const isLogin = ref(true);
 const name = ref('');
 const phoneNumber = ref('');
 const otp = ref('');
 const otpSent = ref(false);
 const error = ref('');
+const isLoading = ref(false);
 const router = useRouter();
-let recaptchaVerifier = null;
-let confirmationResult;
-onMounted(() => {
-    const auth = getAuth();
-    // Render the reCAPTCHA widget
-    recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'normal', // Make the reCAPTCHA visible
-        'callback': () => {
-            // reCAPTCHA solved, you can enable the submit button if you want
-        },
-        'expired-callback': () => {
-            // Response expired. Ask user to solve reCAPTCHA again.
-            error.value = "reCAPTCHA expired. Please solve it again.";
+const verificationId = ref(null);
+const listeners = [];
+onMounted(async () => {
+    if (Capacitor.isNativePlatform()) {
+        try {
+            const phoneCodeSentListener = await FirebaseAuthentication.addListener('phoneCodeSent', (result) => {
+                if (result && result.verificationId) {
+                    verificationId.value = result.verificationId;
+                    otpSent.value = true;
+                    isLoading.value = false;
+                    error.value = '';
+                }
+                else {
+                    error.value = 'Failed to get verification ID. Please try again.';
+                    isLoading.value = false;
+                }
+            });
+            listeners.push(phoneCodeSentListener);
         }
-    });
-    recaptchaVerifier.render(); // Explicitly render the widget
+        catch (e) {
+            console.error('Failed to add listener', e);
+        }
+    }
+});
+onUnmounted(() => {
+    listeners.forEach(listener => listener.remove());
 });
 const sendOtp = async () => {
     error.value = '';
+    isLoading.value = true;
     if (!phoneNumber.value) {
         error.value = 'Please enter a valid phone number.';
+        isLoading.value = false;
         return;
     }
-    // Assume Indian country code if not provided
+    if (!Capacitor.isNativePlatform()) {
+        error.value = 'Phone authentication is only available on the native app.';
+        isLoading.value = false;
+        return;
+    }
     const formattedPhoneNumber = `+91${phoneNumber.value}`;
-    const auth = getAuth();
-    if (!recaptchaVerifier) {
-        error.value = "reCAPTCHA not initialized.";
-        return;
-    }
     try {
-        confirmationResult = await signInWithPhoneNumber(auth, formattedPhoneNumber, recaptchaVerifier);
-        otpSent.value = true;
+        await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: formattedPhoneNumber });
     }
     catch (err) {
-        error.value = `Error sending code: ${err.message}`;
-        // Reset reCAPTCHA if an error occurs to allow the user to try again
-        recaptchaVerifier.render().then((widgetId) => {
-            grecaptcha.reset(widgetId);
-        });
+        console.error('Capacitor Firebase Auth Error (signInWithPhoneNumber):', err);
+        error.value = `Error sending code: ${err.message || 'Failed to initiate sign-in.'}`;
+        isLoading.value = false;
     }
 };
 const verifyOtp = async () => {
     error.value = '';
+    isLoading.value = true;
     if (!otp.value || otp.value.length !== 6) {
         error.value = 'Please enter the 6-digit code.';
+        isLoading.value = false;
+        return;
+    }
+    if (!verificationId.value) {
+        error.value = 'Could not verify OTP. Please try sending the code again.';
+        isLoading.value = false;
         return;
     }
     try {
-        const credential = await confirmationResult.confirm(otp.value);
-        const user = credential.user;
-        if (!isLogin.value && name.value) {
-            await updateProfile(user, { displayName: name.value });
+        const auth = getAuth();
+        const credential = PhoneAuthProvider.credential(verificationId.value, otp.value);
+        const result = await signInWithCredential(auth, credential);
+        const user = result.user;
+        if (!user) {
+            throw new Error("Authentication failed, no user returned.");
         }
+        if (!isLogin.value && name.value && auth.currentUser) {
+            await updateProfile(auth.currentUser, { displayName: name.value });
+        }
+        resetState();
         router.push('/dashboard');
     }
     catch (err) {
-        error.value = `Error verifying code: ${err.message}`;
+        console.error('Capacitor Firebase Auth Error (verifyOtp):', err);
+        error.value = `Error verifying code: ${err.message || 'Invalid code or session.'}`;
     }
+    finally {
+        isLoading.value = false;
+    }
+};
+const resetState = () => {
+    name.value = '';
+    phoneNumber.value = '';
+    otp.value = '';
+    otpSent.value = false;
+    error.value = '';
+    isLoading.value = false;
+    verificationId.value = null;
+};
+const toggleAuthMode = () => {
+    isLogin.value = !isLogin.value;
+    resetState();
 };
 debugger; /* PartiallyEnd: #3632/scriptSetup.vue */
 const __VLS_ctx = {};
@@ -79,6 +120,7 @@ let __VLS_directives;
 /** @type {__VLS_StyleScopedClasses['input-group']} */ ;
 /** @type {__VLS_StyleScopedClasses['input-group']} */ ;
 /** @type {__VLS_StyleScopedClasses['input-group']} */ ;
+/** @type {__VLS_StyleScopedClasses['auth-button']} */ ;
 /** @type {__VLS_StyleScopedClasses['auth-button']} */ ;
 /** @type {__VLS_StyleScopedClasses['auth-button']} */ ;
 /** @type {__VLS_StyleScopedClasses['toggle-auth']} */ ;
@@ -120,13 +162,10 @@ if (!__VLS_ctx.otpSent) {
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.input, __VLS_intrinsicElements.input)({
         type: "tel",
-        placeholder: "Phone Number",
+        placeholder: "Phone Number (e.g., 9876543210)",
         required: true,
     });
     (__VLS_ctx.phoneNumber);
-    __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-        id: "recaptcha-container",
-    });
     if (__VLS_ctx.error) {
         __VLS_asFunctionalElement(__VLS_intrinsicElements.p, __VLS_intrinsicElements.p)({
             ...{ class: "error-message" },
@@ -136,7 +175,14 @@ if (!__VLS_ctx.otpSent) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
         type: "submit",
         ...{ class: "auth-button" },
+        disabled: (__VLS_ctx.isLoading),
     });
+    if (!__VLS_ctx.isLoading) {
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
+    }
+    else {
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
+    }
 }
 else {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
@@ -165,13 +211,17 @@ else {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
         type: "submit",
         ...{ class: "auth-button" },
+        disabled: (__VLS_ctx.isLoading),
     });
+    if (!__VLS_ctx.isLoading) {
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
+    }
+    else {
+        __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({});
+    }
 }
 __VLS_asFunctionalElement(__VLS_intrinsicElements.p, __VLS_intrinsicElements.p)({
-    ...{ onClick: (...[$event]) => {
-            __VLS_ctx.isLogin = !__VLS_ctx.isLogin;
-            __VLS_ctx.error = '';
-        } },
+    ...{ onClick: (__VLS_ctx.toggleAuthMode) },
     ...{ class: "toggle-auth" },
 });
 (__VLS_ctx.isLogin ? 'Need an account? Sign Up' : 'Have an account? Login');
@@ -198,8 +248,10 @@ const __VLS_self = (await import('vue')).defineComponent({
             otp: otp,
             otpSent: otpSent,
             error: error,
+            isLoading: isLoading,
             sendOtp: sendOtp,
             verifyOtp: verifyOtp,
+            toggleAuthMode: toggleAuthMode,
         };
     },
 });
