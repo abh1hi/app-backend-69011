@@ -15,7 +15,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useGoogleMaps } from '../composables/useGoogleMaps';
 
-const props = defineProps({
+defineProps({
   modelValue: {
     type: String,
     required: true,

@@ -29,7 +29,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { collection, getDocs, query, where, and, QueryConstraint } from 'firebase/firestore';
+import { collection, getDocs, query, where, and, QueryFilterConstraint } from 'firebase/firestore';
 import { db } from '../firebase';
 import PropertyCard from '../components/PropertyCard.vue';
 
@@ -52,7 +52,7 @@ const fetchResults = async () => {
   error.value = null;
   try {
     const { type, city, state, pincode, budget } = route.query;
-    const filters: QueryConstraint[] = [];
+    const filters: QueryFilterConstraint[] = [];
 
     if (type) {
       const saleOrRent = type === 'buy' ? 'For Sale' : 'For Rent';

@@ -99,9 +99,9 @@ const handleFileUpload = (type: 'photo' | 'video', event: Event) => {
 
 const deleteExistingMedia = (url: string, type: 'photo' | 'video') => {
   if (type === 'photo') {
-    existingMedia.value.photos = existingMedia.value.photos.filter(p => p !== url);
+    existingMedia.value.photos = existingMedia.value.photos.filter((p: string) => p !== url);
   } else {
-    existingMedia.value.videos = existingMedia.value.videos.filter(v => v !== url);
+    existingMedia.value.videos = existingMedia.value.videos.filter((v: string) => v !== url);
   }
   deletedUrls.value.push(url);
   emitUpdates();
