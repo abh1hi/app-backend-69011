@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "882368628360",
+    "project_id": "app-backend-69011",
+    "storage_bucket": "app-backend-69011.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:882368628360:android:d51432d7a6ed557747013d",
+        "android_client_info": {
+          "package_name": "com.apnaaashiyanaa.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2nWUA5x2PWz7M8zJsXq6KTZQJmmTHGWI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
