@@ -1,9 +1,13 @@
 
 import { ref } from 'vue';
-import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
+import { FirebaseAuthentication, type User } from '@capacitor-firebase/authentication';
 
 export function useAuth() {
-  const user = ref(null);
+  const user = ref<User | null>(null);
+
+  FirebaseAuthentication.getCurrentUser().then(result => {
+    user.value = result.user;
+  });
 
   const googleSignIn = async () => {
     try {

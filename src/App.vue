@@ -10,7 +10,7 @@
         <div class="user-profile">
             <button v-if="!user" @click="googleSignIn">Sign in with Google</button>
             <div v-if="user">
-              <img :src="user.photoUrl" alt="User Profile" class="profile-pic" />
+              <img :src="user.photoUrl || ''" alt="User Profile" class="profile-pic" />
               <button @click="signOut">Sign Out</button>
             </div>
         </div>
@@ -29,15 +29,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import Sidebar from './components/Sidebar.vue';
 import BottomNav from './components/BottomNav.vue';
-import { useUserStore } from './stores/user';
 import { useAuth } from './composables/useAuth';
 
 const isSidebarOpen = ref(false);
-const userStore = useUserStore();
 const router = useRouter();
 const transitionName = ref('slide-forward');
 const { user, googleSignIn, signOut } = useAuth();
@@ -65,10 +63,6 @@ router.beforeEach((to, from) => {
       transitionName.value = 'fade';
     }
   }
-});
-
-onMounted(() => {
-  userStore.listenForAuthStateChanges();
 });
 </script>
 
