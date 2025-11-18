@@ -1,7 +1,7 @@
 <template>
   <aside class="sidebar" :class="{ 'is-open': isOpen }">
     <div class="sidebar-header">
-      <h2 class="sidebar-title">Aapna Ashiana</h2>
+      <h2 class="sidebar-title">Apna Aashiyanaa</h2>
       <div v-if="user" class="user-info">
         <p class="user-name">{{ user.displayName || 'User' }}</p>
       </div>
@@ -69,7 +69,7 @@ const handleLogout = async () => {
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   border-right: 0.5px solid rgba(0, 0, 0, 0.1);
   z-index: 200;
-  padding: 24px 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   transform: translateX(-100%);
@@ -85,6 +85,8 @@ const handleLogout = async () => {
   margin-bottom: 32px;
   padding-bottom: 24px;
   border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
 .sidebar-title {
@@ -108,22 +110,22 @@ const handleLogout = async () => {
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
   flex: 1;
+  padding: 0;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: 12px;
+  gap: 16px;
+  padding: 12px;
+  border-radius: 10px;
   text-decoration: none;
-  color: rgba(0, 0, 0, 0.7);
-  font-weight: 500;
-  font-size: 0.9375rem;
-  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  width: 100%;
+  color: var(--text-secondary);
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   background: none;
   border: none;
   cursor: pointer;
@@ -132,35 +134,43 @@ const handleLogout = async () => {
 }
 
 .nav-item:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
 }
 
-.nav-item:hover,
+.nav-item:hover:not(.router-link-active) {
+  background: rgba(0, 0, 0, 0.04);
+  color: var(--text-primary);
+}
+
 .router-link-active {
-  background: rgba(0, 122, 255, 0.1);
-  color: var(--primary-blue);
+  background: var(--primary-blue);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
 }
 
 .nav-item svg {
   width: 22px;
   height: 22px;
-  opacity: 0.7;
-  transition: opacity 0.2s;
+  color: var(--text-secondary);
+  transition: all 0.25s;
 }
 
-.nav-item.router-link-active svg,
 .nav-item:hover svg {
-  opacity: 1;
+    color: var(--text-primary);
+}
+
+.nav-item.router-link-active svg {
+  color: white;
 }
 
 .logout-button {
-  color: #ff3b30;
+  color: #E53E3E;
   margin-top: auto;
 }
 
 .logout-button:hover {
-  background: rgba(255, 59, 48, 0.1);
-  color: #ff3b30;
+  background: rgba(229, 62, 62, 0.1);
+  color: #C53030;
 }
 
 @media (min-width: 768px) {

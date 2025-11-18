@@ -110,7 +110,9 @@ onMounted(() => {
           if (status === 'OK' && results && results[0]) {
             const placeResult = results[0];
             const { city, state, pincode } = parseAddressComponents(placeResult);
-            emitLocation(e.latLng, placeResult.formatted_address, placeResult.place_id, city, state, pincode);
+            if (e.latLng) {
+              emitLocation(e.latLng, placeResult.formatted_address, placeResult.place_id, city, state, pincode);
+            }
           }
         });
       }

@@ -5,6 +5,7 @@ import './style.css';
 import './assets/main.css';
 import App from './App.vue';
 import router from './router';
+import { useGoogleMaps } from './composables/useGoogleMaps';
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -12,7 +13,10 @@ const pinia = createPinia();
 app.use(router);
 app.use(pinia);
 
-app.mount('#app');
+const { load } = useGoogleMaps();
+load().then(() => {
+  app.mount('#app');
+});
 
 // Handle Android back button
 CapacitorApp.addListener('backButton', () => {

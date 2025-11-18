@@ -17,7 +17,7 @@
     <div class="search-form">
       <div class="search-input-group">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-        <input v-model="city" type="text" placeholder="Enter a city" class="search-input">
+        <input ref="locationInput" type="text" placeholder="Enter a city" class="search-input">
       </div>
       <div class="search-input-group">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon rupee-icon"><path d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"></path><path d="M8 8h8M8 12h8M15 16H8"></path><path d="M11 16s-1.5-2-3-2"></path></svg>
@@ -32,25 +32,53 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const activeTab = ref('buy');
-const city = ref('');
 const budget = ref('');
 const router = useRouter();
+const locationInput = ref<HTMLInputElement | null>(null);
+const selectedPlace = ref<any>(null);
+
+onMounted(() => {
+  if (locationInput.value) {
+    const autocomplete = new google.maps.places.Autocomplete(locationInput.value, {
+      types: ['(cities)'],
+      componentRestrictions: { country: "in" }
+    });
+
+    autocomplete.addListener('place_changed', () => {
+      const place = autocomplete.getPlace();
+      const city = place.address_components?.find(c => c.types.includes('locality'))?.long_name;
+      const state = place.address_components?.find(c => c.types.includes('administrative_area_level_1'))?.long_name;
+      const pincode = place.address_components?.find(c => c.types.includes('postal_code'))?.long_name;
+
+      selectedPlace.value = {
+        city,
+        state,
+        pincode
+      };
+    });
+  }
+});
 
 const performSearch = () => {
   const query: any = {
     type: activeTab.value,
   };
-  if (city.value) {
-    query.city = city.value;
+
+  if (selectedPlace.value) {
+    if(selectedPlace.value.city) query.city = selectedPlace.value.city;
+    if(selectedPlace.value.state) query.state = selectedPlace.value.state;
+    if(selectedPlace.value.pincode) query.pincode = selectedPlace.value.pincode;
   }
+
   if (budget.value) {
     query.budget = budget.value;
   }
-  router.push({ name: 'SearchResults', query });
+  
+  router.push({ path: '/search', query });
 };
 </script>
 

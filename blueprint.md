@@ -3,7 +3,7 @@
 
 ## Overview
 
-This is a Vue.js single-page application (SPA) for a real estate platform called "Aapna Ashiana". It features a beautiful and modern user interface, a user profile system, a streamlined authentication process, and a comprehensive property listing feature. The application is fully responsive and designed for a great user experience on both mobile and web.
+This is a Vue.js single-page application (SPA) for a real estate platform called "Apna Aashiyanaa". It features a beautiful and modern user interface, a user profile system, a streamlined authentication process, and a comprehensive property listing feature. The application is fully responsive and designed for a great user experience on both mobile and web.
 
 ## Implemented Features
 
@@ -55,14 +55,7 @@ This is a Vue.js single-page application (SPA) for a real estate platform called
     *   **Disabled Location Fields:** The location, city, state, and pincode fields are now disabled in edit mode to prevent users from changing the property's location after it has been listed.
     *   **Number Input Fix:** Added a `min="0"` attribute to number inputs to prevent negative values and fix a bug where empty fields would default to 0.
     *   **Cancel Button:** A "Cancel" button has been added to the `EditProperty.vue` page, allowing users to discard their changes and navigate back to the previous page.
-*   **Google Maps API Logging:**
-    *   Added a `callback` function to the Google Maps API script in `index.html` to log a confirmation message to the console when the API is loaded.
+*   **Google Maps API Loading:**
+    *   **Best Practices:** The Google Maps API is now loaded using a `useGoogleMaps.ts` composable that follows best practices, including a callback function to ensure the API is fully initialized before use.
+    *   **Environment Variables:** The API key is securely stored in a `.env` file and loaded using `import.meta.env.VITE_GOOGLE_MAPS_API_KEY`.
 
-## Current Task: Add Google Maps API Logging
-
-### Plan
-
-1.  **Add a callback function:** Create a new function `onGoogleMapsApiReady` in a `<script>` tag in the `<head>` of `index.html`.
-2.  **Update the script URL:** Add the `callback` parameter to the Google Maps API script URL, pointing to the `onGoogleMapsApiReady` function.
-3.  **Add `async` and `defer` attributes:** Ensure the script is loaded asynchronously and deferred until the page has finished parsing.
-4.  **Update Blueprint:** Document the new feature in the `blueprint.md` file.

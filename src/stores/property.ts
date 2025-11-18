@@ -17,6 +17,7 @@ import {
 } from 'firebase/firestore';
 import { db, storage } from '../firebase';
 import { ref as storageRef, deleteObject, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { geohashQueryBounds, distanceBetween } from 'geofire-common';
 
 interface MediaItem {
   file: File;
@@ -36,14 +37,36 @@ interface FetchPropertiesOptions {
   ownerId?: string | null;
   filters?: any;
   lastDoc?: QueryDocumentSnapshot<DocumentData> | null;
+  location?: {
+    lat: number;
+    lng: number;
+  }
 }
 
+// ADD THIS NEW INTERFACE
+export interface PropertyDocument extends DocumentData {
+  id: string;
+  basic: {
+    lat: number;
+    lng: number;
+    bedrooms: number;
+    bathrooms: number;
+    size: number;
+    geohash: string;
+  };
+  features: {
+    amenities: string[];
+  };
+  pricing: {
+      price: number;
+  };
+}
 
 export const usePropertyStore = defineStore('property', {
   state: () => ({
     propertyId: null as string | null, // To hold the ID for the new property being created
     property: {
-      basic: { propertyType: '', saleOrRent: '', title: '', description: '', location: '', state: '', city: '', pincode: '', size: null, bedrooms: null, bathrooms: null, floor: '', age: '' },
+      basic: { propertyType: '', saleOrRent: '', title: '', description: '', location: '', state: '', city: '', pincode: '', size: null, bedrooms: null, bathrooms: null, floor: '', age: '', lat: null, lng: null, geohash: '' },
       pricing: { price: null, maintenance: '', deposit: '', paymentTerms: '' },
       features: { furnishing: '', parking: '', security: '', amenities: [] as string[] },
       media: { photos: [] as MediaItem[], videos: [] as MediaItem[] },
@@ -125,16 +148,65 @@ export const usePropertyStore = defineStore('property', {
       return cached;
     },
 
-    async fetchProperties(options: FetchPropertiesOptions) {
-      const { collectionName, ownerId, filters, lastDoc } = options;
-      const collectionRef = collection(db, collectionName);
-      const queryConstraints: QueryConstraint[] = [];
+    // REPLACE THE ENTIRE fetchProperties function with this
+async fetchProperties(options: FetchPropertiesOptions) {
+  const { collectionName, ownerId, filters, lastDoc, location } = options;
+  const collectionRef = collection(db, collectionName);
 
-      // --- Build Server-Side Query --- 
+  try {
+    let documents: DocumentData[] = [];
+    let newLastDoc: QueryDocumentSnapshot<DocumentData> | null = null;
+    let hasMore = false;
+
+    if (location && location.lat && location.lng) {
+      // --- GEO-QUERY LOGIC ---
+      const center: [number, number] = [location.lat, location.lng];
+      const radiusInM = 50 * 1000; // 50km radius
+
+      const bounds = geohashQueryBounds(center, radiusInM);
+      const promises = bounds.map((b) => {
+        const q = query(
+          collectionRef,
+          orderBy('basic.geohash'),
+          where('basic.geohash', '>=', b[0]),
+          where('basic.geohash', '<=', b[1])
+        );
+        return getDocs(q);
+      });
+
+      const snapshots = await Promise.all(promises);
+      const matchingDocs: PropertyDocument[] = [];
+
+      snapshots.forEach((snap) => {
+        snap.forEach((doc) => {
+          const docData = { id: doc.id, ...doc.data() } as PropertyDocument;
+          
+          if (docData.basic?.lat && docData.basic?.lng) {
+            const docLoc: [number, number] = [docData.basic.lat, docData.basic.lng];
+            const distanceInKm = distanceBetween(docLoc, center);
+            const radiusInKm = radiusInM / 1000;
+            
+            if (distanceInKm <= radiusInKm) {
+              matchingDocs.push(docData);
+            }
+          }
+        });
+      });
+
+      const uniqueDocs = new Map<string, DocumentData>();
+      matchingDocs.forEach(doc => uniqueDocs.set(doc.id, doc));
+      documents = Array.from(uniqueDocs.values());
+
+      hasMore = false;
+      newLastDoc = null;
+
+    } else {
+      // --- NON-GEO-QUERY LOGIC ---
+      const queryConstraints: QueryConstraint[] = [];
       if (ownerId) {
         queryConstraints.push(where('ownerId', '==', ownerId));
       }
-      
+
       if (filters) {
         if (filters.saleOrRent) {
           queryConstraints.push(where('basic.saleOrRent', '==', filters.saleOrRent));
@@ -146,8 +218,8 @@ export const usePropertyStore = defineStore('property', {
           queryConstraints.push(where('basic.propertyType', '==', filters.propertyType));
         }
         if (filters.priceRange && filters.priceRange[1] < this.highestPrice) {
-            queryConstraints.push(where('pricing.price', '>=', filters.priceRange[0]));
-            queryConstraints.push(where('pricing.price', '<=', filters.priceRange[1]));
+          queryConstraints.push(where('pricing.price', '>=', filters.priceRange[0]));
+          queryConstraints.push(where('pricing.price', '<=', filters.priceRange[1]));
         }
       }
 
@@ -162,53 +234,45 @@ export const usePropertyStore = defineStore('property', {
       }
 
       queryConstraints.push(limit(25));
-
       const finalQuery = query(collectionRef, ...queryConstraints);
+      const querySnapshot = await getDocs(finalQuery);
 
-      // --- Execute Query and Filter --- 
-      try {
-        const querySnapshot = await getDocs(finalQuery);
-        let documents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      documents = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
+      hasMore = querySnapshot.docs.length === 25;
+    }
 
-        // Apply remaining filters on the client-side
-        if (filters) {
-          documents = documents.filter(doc => {
-            const basic = doc.basic || {};
-            const features = doc.features || {};
+    // --- APPLY CLIENT-SIDE FILTERS ---
+    if (filters) {
+      documents = documents.filter(doc => {
+        const propertyDoc = doc as PropertyDocument;
+        const basic = propertyDoc.basic || {};
+        const features = propertyDoc.features || {};
 
-            if (filters.bedrooms > 0 && (basic.bedrooms || 0) < filters.bedrooms) {
-              return false;
-            }
-            if (filters.bathrooms > 0 && (basic.bathrooms || 0) < filters.bathrooms) {
-              return false;
-            }
-            if (filters.sqftRange) {
-              const size = basic.size || 0;
-              if (size < filters.sqftRange[0] || size > filters.sqftRange[1]) {
-                return false;
-              }
-            }
-            if (filters.amenities && filters.amenities.length > 0) {
-              const propertyAmenities = features.amenities || [];
-              if (!filters.amenities.every((a: string) => propertyAmenities.includes(a))) {
-                return false;
-              }
-            }
-            return true;
-          });
+        if (filters.bedrooms > 0 && (basic.bedrooms || 0) < filters.bedrooms) return false;
+        if (filters.bathrooms > 0 && (basic.bathrooms || 0) < filters.bathrooms) return false;
+        if (filters.sqftRange) {
+          const size = basic.size || 0;
+          if (size < filters.sqftRange[0] || size > filters.sqftRange[1]) return false;
         }
+        if (filters.amenities && filters.amenities.length > 0) {
+          const propertyAmenities = features.amenities || [];
+          if (!filters.amenities.every((a: string) => propertyAmenities.includes(a))) return false;
+        }
+        return true;
+      });
+    }
 
-        documents.forEach(doc => this.cacheProperty(doc));
-        const newLastDoc = querySnapshot.docs[querySnapshot.docs.length - 1] || null;
-        const hasMore = querySnapshot.docs.length === 25;
+    documents.forEach(doc => this.cacheProperty(doc));
 
-        return { newDocuments: documents, newLastDoc, hasMore };
+    return { newDocuments: documents, newLastDoc, hasMore };
 
-      } catch (error) {
-        console.error("[PropertyStore] ERROR executing getDocs:", error);
-        throw error;
-      }
-    },
+  } catch (error) {
+    console.error("[PropertyStore] ERROR executing fetchProperties:", error);
+    throw error;
+  }
+},
+
 
     async deleteProperty(propertyId: string) {
       console.log(`[PropertyStore] Initiating deletion for property: ${propertyId}`);
@@ -309,71 +373,82 @@ export const usePropertyStore = defineStore('property', {
     },
 
 
-    async fetchHighestPrice(): Promise<number> {
-        try {
-          const q = query(
-            collection(db, 'properties'),
-            orderBy('pricing.price', 'desc'),
-            limit(1)
-          );
-          const querySnapshot = await getDocs(q);
-          if (!querySnapshot.empty) {
-            const highestPriceValue = querySnapshot.docs[0].data()?.pricing?.price;
-            if (highestPriceValue != null) {
-              this.highestPrice = highestPriceValue;
-              return highestPriceValue;
-            }
-          }
-          return this.highestPrice;
-        } catch (error) {
-          console.error("[PropertyStore] Error fetching highest price:", error);
-          return this.highestPrice;
-        }
-      },
-      
-    async fetchHighestSqft(): Promise<number> {
-      try {
-        const q = query(
-          collection(db, 'properties'),
-          orderBy('basic.size', 'desc'),
-          limit(1)
-        );
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          const highestSqftValue = querySnapshot.docs[0].data()?.basic?.size;
-          if (highestSqftValue != null) {
-            this.highestSqft = highestSqftValue;
-            return highestSqftValue;
+    // REPLACE these three functions
+async fetchHighestPrice(): Promise<number> {
+    try {
+      const q = query(
+        collection(db, 'properties'),
+        orderBy('pricing.price', 'desc'),
+        limit(1)
+      );
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        const firstDoc = querySnapshot.docs[0];
+        if (firstDoc) {
+          const docData = firstDoc.data() as PropertyDocument;
+          if (docData?.pricing?.price != null) {
+            this.highestPrice = docData.pricing.price;
+            return docData.pricing.price;
           }
         }
-        return this.highestSqft;
-      } catch (error) {
-        console.error("[PropertyStore] Error fetching highest sqft:", error);
-        return this.highestSqft;
       }
-    },
+      return this.highestPrice;
+    } catch (error) {
+      console.error("[PropertyStore] Error fetching highest price:", error);
+      return this.highestPrice;
+    }
+  },
+  
+async fetchHighestSqft(): Promise<number> {
+  try {
+    const q = query(
+      collection(db, 'properties'),
+      orderBy('basic.size', 'desc'),
+      limit(1)
+    );
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const firstDoc = querySnapshot.docs[0];
+      if (firstDoc) {
+        const docData = firstDoc.data() as PropertyDocument;
+        if (docData?.basic?.size != null) {
+          this.highestSqft = docData.basic.size;
+          return docData.basic.size;
+        }
+      }
+    }
+    return this.highestSqft;
+  } catch (error) {
+    console.error("[PropertyStore] Error fetching highest sqft:", error);
+    return this.highestSqft;
+  }
+},
 
-    async fetchLowestSqft(): Promise<number> {
-      try {
-        const q = query(
-          collection(db, 'properties'),
-          orderBy('basic.size', 'asc'),
-          limit(1)
-        );
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          const lowestSqftValue = querySnapshot.docs[0].data()?.basic?.size;
-          if (lowestSqftValue != null) {
-            this.lowestSqft = lowestSqftValue;
-            return lowestSqftValue;
-          }
+async fetchLowestSqft(): Promise<number> {
+  try {
+    const q = query(
+      collection(db, 'properties'),
+      orderBy('basic.size', 'asc'),
+      limit(1)
+    );
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const firstDoc = querySnapshot.docs[0];
+      if (firstDoc) {
+        const docData = firstDoc.data() as PropertyDocument;
+        if (docData?.basic?.size != null) {
+          this.lowestSqft = docData.basic.size;
+          return docData.basic.size;
         }
-        return this.lowestSqft;
-      } catch (error) {
-        console.error("[PropertyStore] Error fetching lowest sqft:", error);
-        return this.lowestSqft;
       }
-    },
+    }
+    return this.lowestSqft;
+  } catch (error) {
+    console.error("[PropertyStore] Error fetching lowest sqft:", error);
+    return this.lowestSqft;
+  }
+},
+
   
       async fetchAvailableStates() {
         if (this.availableStates.length > 0) return;

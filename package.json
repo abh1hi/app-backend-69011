@@ -15,11 +15,13 @@
     "@capacitor/core": "^7.4.4",
     "firebase": "^10.12.0",
     "firebaseui": "^6.1.0",
+    "geofire-common": "^6.0.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
+    "@types/google.maps": "^3.58.1",
     "@types/node": "^20.11.19",
     "@vitejs/plugin-vue": "^5.0.4",
     "@vue/tsconfig": "^0.8.1",

@@ -1,31 +1,35 @@
 <template>
   <div class="search-results-container">
     <h1 class="results-title">Search Results</h1>
-    <p class="results-subtitle">Showing properties for your search</p>
+    <p class="results-subtitle" v-if="subtitle">{{ subtitle }}</p>
 
     <div v-if="loading" class="loading-state">
       <div class="spinner"></div>
-      <p>Loading search results...</p>
+      <p>Finding properties...</p>
     </div>
 
-    <div v-if="error" class="error-state">
-      <p>{{ error }}</p>
+    <div v-else-if="error" class="error-state">
+      <p class="error-title">Sorry, something went wrong.</p>
+      <p class="error-message">{{ error }}</p>
+      <button @click="fetchResults" class="retry-btn">Try Again</button>
     </div>
 
-    <div v-if="!loading && !error && results.length > 0" class="results-grid">
+    <div v-else-if="results.length > 0" class="results-grid">
       <PropertyCard v-for="property in results" :key="property.id" :property="property" />
     </div>
 
-    <div v-if="!loading && !error && results.length === 0" class="no-results-state">
-      <p>No properties found for your search. Try broadening your criteria.</p>
+    <div v-else class="no-results-state">
+       <img src="https://firebasestorage.googleapis.com/v0/b/aapna-ashiana-c7414.appspot.com/o/defaults%2Fno-results.svg?alt=media&token=42217c46-9132-4a70-8c29-e331c90c766b" alt="No results found" class="no-results-image" />
+      <p class="no-results-title">No Properties Found</p>
+      <p class="no-results-text">We couldn't find any properties matching your search criteria. Please try a different location or budget.</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { collection, getDocs, query, where, and } from 'firebase/firestore';
+import { collection, getDocs, query, where, and, QueryConstraint } from 'firebase/firestore';
 import { db } from '../firebase';
 import PropertyCard from '../components/PropertyCard.vue';
 
@@ -34,45 +38,69 @@ const results = ref<any[]>([]);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-onMounted(async () => {
+const subtitle = computed(() => {
+    const { type, city } = route.query;
+    if (city && type) {
+        const typeText = type === 'buy' ? 'for sale' : 'for rent';
+        return `Showing properties ${typeText} in ${city}`;
+    }
+    return 'Showing properties for your search';
+});
+
+const fetchResults = async () => {
+  loading.value = true;
+  error.value = null;
   try {
-    const { type, city, budget } = route.query;
-    const filters = [];
+    const { type, city, state, pincode, budget } = route.query;
+    const filters: QueryConstraint[] = [];
 
     if (type) {
       const saleOrRent = type === 'buy' ? 'For Sale' : 'For Rent';
       filters.push(where('basic.saleOrRent', '==', saleOrRent));
     }
 
-    if (city) {
-      filters.push(where('basic.state', '==', city));
+    if (city && typeof city === 'string' && city.trim() !== '') {
+      filters.push(where('basic.city', '==', city));
+    }
+
+    if (state && typeof state === 'string' && state.trim() !== '') {
+      filters.push(where('basic.state', '==', state));
+    }
+
+    if (pincode && typeof pincode === 'string' && pincode.trim() !== '') {
+      filters.push(where('basic.pincode', '==', pincode));
     }
 
     if (budget) {
-      filters.push(where('pricing.price', '<=', Number(budget)));
+      const numericBudget = Number(budget);
+      if (!isNaN(numericBudget) && numericBudget > 0) {
+        filters.push(where('pricing.price', '<=', numericBudget));
+      }
     }
     
     let q;
     if (filters.length > 0) {
-        q = query(collection(db, 'properties'), and(...filters));
+      q = query(collection(db, 'properties'), and(...filters));
     } else {
-        q = query(collection(db, 'properties'));
+      q = query(collection(db, 'properties'));
     }
-
 
     const querySnapshot = await getDocs(q);
     results.value = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
   } catch (err: any) {
     console.error("Error fetching search results:", err);
-    if (err.message.includes('index')) {
-      error.value = `The query requires an index. Please create the index in your Firebase console. The error message is: ${err.message}`
+    if (err.code === 'failed-precondition') {
+      error.value = `This query requires a custom index. Please create the composite index in your Firebase Firestore console. Details: ${err.message}`;
     } else {
-       error.value = 'Failed to load search results. Please try again later.';
+      error.value = 'An unexpected error occurred while fetching results.';
     }
   } finally {
     loading.value = false;
   }
-});
+};
+
+onMounted(fetchResults);
 </script>
 
 <style scoped>
@@ -80,38 +108,35 @@ onMounted(async () => {
   padding: 2rem 1rem;
   max-width: 1400px;
   margin: 0 auto;
+  text-align: center;
 }
 
 .results-title {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 800;
   margin-bottom: 0.5rem;
-  text-align: center;
 }
 
 .results-subtitle {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: var(--text-secondary);
-  margin-bottom: 2.5rem;
-  text-align: center;
+  margin-bottom: 3rem;
 }
 
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem;
+  text-align: left;
 }
 
 .loading-state, .error-state, .no-results-state {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   padding: 4rem 1rem;
-}
-
-.error-state {
-    color: red;
-    max-width: 800px;
-    margin: 0 auto;
-    word-break: break-word;
+  min-height: 50vh;
 }
 
 .spinner {
@@ -121,10 +146,63 @@ onMounted(async () => {
   width: 50px;
   height: 50px;
   animation: spin 1s linear infinite;
-  margin: 0 auto 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.error-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--danger-red);
+  margin-bottom: 0.5rem;
+}
+
+.error-message {
+  max-width: 600px;
+  margin-bottom: 2rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.retry-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  background-color: var(--primary-blue);
+  color: white;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.retry-btn:hover {
+  background-color: #006ae6;
+}
+
+.no-results-image {
+  width: 150px;
+  height: auto;
+  margin-bottom: 2rem;
+  opacity: 0.7;
+}
+
+.no-results-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.no-results-text {
+  color: var(--text-secondary);
+  max-width: 400px;
 }
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
 }
 </style>

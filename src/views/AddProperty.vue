@@ -82,19 +82,14 @@
         <span v-if="basicErrors.description" class="error-message">{{ basicErrors.description }}</span>
       </div>
       
-            <div class="form-group">
+      <div class="form-group">
           <label>Location/Address</label>
-          <LocationPicker v-if="isMapsApiLoaded" @location-selected="handleLocationSelected" />
-           <div v-else class="loading-state">
-            <div class="spinner"></div>
-            <p>Loading maps...</p>
-          </div>
+          <LocationPicker @location-selected="handleLocationSelected" />
           <span v-if="basicErrors.location" class="error-message">{{ basicErrors.location }}</span>
           <div v-if="isCheckingDuplicates" class="checking-message">
             Verifying address...
           </div>
       </div>
-
 
       <div class="form-group">
         <label>State</label>
@@ -281,10 +276,6 @@ import FormModal from '../components/FormModal.vue';
 import LocationPicker from '../components/LocationPicker.vue';
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
-import { useGoogleMaps } from '../composables/useGoogleMaps';
-
-
-
 
 interface LocationData {
   address: string;
@@ -296,9 +287,6 @@ interface LocationData {
 
 const router = useRouter();
 const propertyStore = usePropertyStore();
-const { isLoaded: isMapsApiLoaded } = useGoogleMaps();
-
-
 
 const allAmenities = ['Gym', 'Pool', 'Garden', 'Lift'];
 const fileInput = ref<HTMLInputElement | null>(null);

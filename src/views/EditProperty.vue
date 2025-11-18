@@ -11,7 +11,7 @@
       </div>
     </div>
 
-    <div v-if="propertyData && isMapsApiLoaded" class="form-container">
+    <div v-if="propertyData" class="form-container">
       <EditSection title="Basic Information" startOpen>
         <BasicInfo :initial-data="propertyData.basic" :is-edit-mode="true" @update="handleUpdate('basic', $event)"/>
       </EditSection>
@@ -50,7 +50,6 @@ import { useRoute, useRouter } from 'vue-router';
 import { usePropertyStore } from '../stores/property';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { useGoogleMaps } from '../composables/useGoogleMaps';
 
 import EditSection from '../components/EditSection.vue';
 import BasicInfo from '../components/BasicInfo.vue';
@@ -62,7 +61,6 @@ import MediaInfo from '../components/MediaInfo.vue';
 const route = useRoute();
 const router = useRouter();
 const propertyStore = usePropertyStore();
-const { load: loadMapsApi, isLoaded: isMapsApiLoaded } = useGoogleMaps();
 
 const propertyData = ref<any>(null);
 const updatedData = ref<any>({});
@@ -73,7 +71,6 @@ const isLoading = ref(true);
 const isSaving = ref(false);
 
 onMounted(async () => {
-  await loadMapsApi(); // Load the Google Maps API
   const cachedProp = propertyStore.getCachedProperty(propertyId);
   if (cachedProp) {
     propertyData.value = JSON.parse(JSON.stringify(cachedProp));
