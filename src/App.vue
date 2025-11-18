@@ -8,7 +8,11 @@
         </button>
         <div class="header-title">Apna Aashiyanaa</div>
         <div class="user-profile">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            <button v-if="!user" @click="googleSignIn">Sign in with Google</button>
+            <div v-if="user">
+              <img :src="user.photoUrl" alt="User Profile" class="profile-pic" />
+              <button @click="signOut">Sign Out</button>
+            </div>
         </div>
       </header>
       <main class="main-content">
@@ -30,11 +34,13 @@ import { useRouter } from 'vue-router';
 import Sidebar from './components/Sidebar.vue';
 import BottomNav from './components/BottomNav.vue';
 import { useUserStore } from './stores/user';
+import { useAuth } from './composables/useAuth';
 
 const isSidebarOpen = ref(false);
 const userStore = useUserStore();
 const router = useRouter();
 const transitionName = ref('slide-forward');
+const { user, googleSignIn, signOut } = useAuth();
 
 // Track navigation direction for animations
 router.beforeEach((to, from) => {
@@ -67,6 +73,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.profile-pic {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
 #app-container {
   min-height: 100vh;
   background: linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%);

@@ -9,12 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor-firebase/authentication": "^7.4.0",
     "@capacitor/android": "^7.4.4",
     "@capacitor/app": "^7.1.0",
     "@capacitor/cli": "^7.4.4",
     "@capacitor/core": "^7.4.4",
-    "firebase": "^10.12.0",
-    "firebaseui": "^6.1.0",
+    "@capacitor/geolocation": "^7.1.5",
+    "firebase": "^11.10.0",
     "geofire-common": "^6.0.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.21",

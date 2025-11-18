@@ -6,6 +6,7 @@ import './assets/main.css';
 import App from './App.vue';
 import router from './router';
 import { useGoogleMaps } from './composables/useGoogleMaps';
+import { firebaseApp } from './firebase-config';
 
 const app = createApp(App);
 const pinia = createPinia();
