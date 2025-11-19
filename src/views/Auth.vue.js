@@ -12,11 +12,11 @@ const error = ref('');
 const isLoading = ref(false);
 const router = useRouter();
 const verificationId = ref(null);
-const listeners = [];
+let phoneCodeSentListener = null;
 onMounted(async () => {
     if (Capacitor.isNativePlatform()) {
         try {
-            const phoneCodeSentListener = await FirebaseAuthentication.addListener('phoneCodeSent', (result) => {
+            phoneCodeSentListener = await FirebaseAuthentication.addListener('phoneCodeSent', (result) => {
                 if (result && result.verificationId) {
                     verificationId.value = result.verificationId;
                     otpSent.value = true;
@@ -28,7 +28,6 @@ onMounted(async () => {
                     isLoading.value = false;
                 }
             });
-            listeners.push(phoneCodeSentListener);
         }
         catch (e) {
             console.error('Failed to add listener', e);
@@ -36,7 +35,9 @@ onMounted(async () => {
     }
 });
 onUnmounted(() => {
-    listeners.forEach(listener => listener.remove());
+    if (phoneCodeSentListener) {
+        phoneCodeSentListener.remove();
+    }
 });
 const sendOtp = async () => {
     error.value = '';
