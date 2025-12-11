@@ -3,12 +3,54 @@
     <!-- User Profile Section -->
     <div v-if="user" class="profile-card glass-card">
       <div class="profile-header">
-        <h2 class="profile-name">{{ user.displayName || 'User' }}</h2>
+        <div class="profile-info-row">
+          <h2 class="profile-name">{{ user.displayName || 'User' }}</h2>
+          <span 
+            v-if="userProfile?.role" 
+            class="role-badge" 
+            :class="userProfile.role"
+          >
+            {{ userProfile.role.charAt(0).toUpperCase() + userProfile.role.slice(1) }}
+          </span>
+        </div>
         <p class="profile-phone">{{ user.phoneNumber || 'No phone number' }}</p>
       </div>
       <button @click="handleLogout" class="logout-button">
         <i class="fas fa-sign-out-alt"></i>
         <span>Sign Out</span>
+      </button>
+    </div>
+
+    <!-- Dealer Documents Section (Visible Only for Dealers) -->
+    <div v-if="userProfile?.role === 'dealer'" class="info-card glass-card">
+      <div class="card-header">
+        <h3>Verification Documents</h3>
+        <span class="status-badge" :class="userProfile.isVerified ? 'verified' : 'pending'">
+          {{ userProfile.isVerified ? 'Verified' : 'Pending Verification' }}
+        </span>
+      </div>
+      <div class="documents-list">
+        <div class="document-item" v-if="userProfile.documents?.aadharCardUrl">
+          <div class="doc-icon">📄</div>
+          <div class="doc-info">
+            <span class="doc-title">Aadhar Card</span>
+            <a :href="userProfile.documents.aadharCardUrl" target="_blank" class="doc-link">View Document</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Become a Dealer Section (Visible Only for Buyers) -->
+    <div v-if="userProfile?.role === 'buyer'" class="upgrade-card glass-card">
+      <div class="upgrade-content">
+        <div class="upgrade-icon">💼</div>
+        <div class="upgrade-text">
+          <h3>Become a Dealer</h3>
+          <p>Upgrade to list properties and reach thousands of buyers.</p>
+        </div>
+      </div>
+      <button @click="showUploadSheet = true" class="upgrade-button">
+        Upgrade Now
       </button>
     </div>
 
@@ -40,6 +82,25 @@
         <button @click="loadMore" class="load-more-button">Load More</button>
       </div>
     </div>
+
+    
+    <!-- Initialize Profile Section (Visible when User exists but no Profile) -->
+    <div v-if="!userProfile && user" class="info-card glass-card">
+      <div class="card-header">
+        <h3>Complete Your Profile</h3>
+      </div>
+      <p style="margin-bottom: 20px; color: var(--text-secondary);">
+        It looks like your profile setup isn't complete. Please continue to set up your account.
+      </p>
+      <button @click="initializeProfile" class="upgrade-button">
+        Continue as Buyer
+      </button>
+    </div>
+
+    <IDUploadActionSheet 
+      :isVisible="showUploadSheet"
+      @upload-complete="handleUpgradeUpload"
+    />
   </div>
 </template>
 
@@ -50,11 +111,16 @@ import { useUserStore } from '../stores/user';
 import { usePropertyStore } from '../stores/property';
 import { useInfiniteScroll } from '../composables/useInfiniteScroll';
 import PropertyCard from '../components/PropertyCard.vue';
+import IDUploadActionSheet from '../components/IDUploadActionSheet.vue';
+import { ref } from 'vue';
 
 const userStore = useUserStore();
 const propertyStore = usePropertyStore();
 const router = useRouter();
 const user = computed(() => userStore.user);
+const userProfile = computed(() => userStore.profile);
+
+const showUploadSheet = ref(false);
 
 const ownerId = computed(() => user.value?.uid || null);
 
@@ -86,6 +152,31 @@ const handleDelete = async (propertyId: string) => {
       console.error("Error deleting property:", err);
       alert('Failed to delete property.');
     }
+  }
+};
+const handleUpgradeUpload = async (file: File) => {
+  try {
+    await userStore.upgradeToDealer(file);
+    showUploadSheet.value = false;
+    alert('Upgrade request submitted! You can now list properties.');
+  } catch (e) {
+    console.error('Upgrade failed', e);
+    alert('Failed to upgrade. Please try again.');
+  }
+};
+
+const initializeProfile = async () => {
+  if (!user.value) return;
+  try {
+    await userStore.createUserProfile(user.value.uid, { 
+      role: 'buyer',
+      isVerified: false 
+    });
+    // Profile should automatically update in store, but we can fetch to be safe
+    // userStore.fetchUserProfile(user.value.uid); // fetchUserProfile updates the reactive 'profile'
+  } catch (e) {
+    console.error('Failed to initialize profile', e);
+    alert('Failed to create profile. Please try again.');
   }
 };
 </script>
@@ -187,6 +278,160 @@ const handleDelete = async (propertyId: string) => {
     box-shadow: 0 8px 24px rgba(255, 59, 48, 0.4);
     transform: translateY(-2px);
   }
+}
+
+.upgrade-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.upgrade-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.upgrade-icon {
+  font-size: 2rem;
+  background: rgba(0, 122, 255, 0.1);
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.upgrade-text h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.upgrade-text p {
+  margin: 2px 0 0 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.upgrade-button {
+  background: var(--primary-blue);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* Role Badge Styles */
+.profile-info-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0.5rem;
+}
+
+.role-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.role-badge.buyer {
+  background: rgba(0, 122, 255, 0.1);
+  color: var(--primary-blue);
+}
+
+.role-badge.dealer {
+  background: rgba(52, 199, 89, 0.1);
+  color: #34c759;
+}
+
+/* Info Card (Documents) Styles */
+.info-card {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: 20px;
+  background: white;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.card-header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.status-badge {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.status-badge.verified {
+  background: rgba(52, 199, 89, 0.1);
+  color: #34c759;
+}
+
+.status-badge.pending {
+  background: rgba(255, 149, 0, 0.1);
+  color: #ff9500;
+}
+
+.document-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 12px;
+}
+
+.doc-icon {
+  font-size: 1.5rem;
+}
+
+.doc-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.doc-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.doc-link {
+  font-size: 0.8rem;
+  color: var(--primary-blue);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.doc-link:hover {
+  text-decoration: underline;
 }
 
 .properties-section {

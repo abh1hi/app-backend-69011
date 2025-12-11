@@ -38,15 +38,35 @@
         {{ isLogin ? 'Need an account? Sign Up' : 'Have an account? Login' }}
       </p>
     </div>
+
+    <div v-if="showRoleModal">
+      <UserRoleModal 
+        :isVisible="showRoleModal" 
+        @select-role="handleRoleSelection"
+      />
+    </div>
+
+    <div v-if="showUploadSheet">
+      <IDUploadActionSheet 
+        :isVisible="showUploadSheet"
+        @upload-complete="handleDocumentUpload"
+      />
+    </div>
+
+    <div id="recaptcha-container"></div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { getAuth, updateProfile, signInWithCredential, PhoneAuthProvider, type User } from 'firebase/auth';
+import { getAuth, updateProfile, signInWithCredential, PhoneAuthProvider, signInWithPhoneNumber, RecaptchaVerifier } from 'firebase/auth';
+
 import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
+import UserRoleModal from '../components/UserRoleModal.vue';
+import IDUploadActionSheet from '../components/IDUploadActionSheet.vue';
+import { useUserStore } from '../stores/user';
 
 const isLogin = ref(true);
 const name = ref('');
@@ -55,7 +75,16 @@ const otp = ref('');
 const otpSent = ref(false);
 const error = ref('');
 const isLoading = ref(false);
+const showRoleModal = ref(false);
+const showUploadSheet = ref(false);
+const selectedRole = ref<'buyer' | 'dealer' | null>(null);
+
 const router = useRouter();
+const userStore = useUserStore();
+
+// Web Auth variables
+let recaptchaVerifier: RecaptchaVerifier | null = null;
+let confirmationResult: any | null = null;
 
 const verificationId = ref<string | null>(null);
 let phoneCodeSentListener: PluginListenerHandle | null = null;
@@ -87,67 +116,132 @@ onUnmounted(() => {
 });
 
 const sendOtp = async () => {
+  if (!phoneNumber.value || phoneNumber.value.length < 10) {
+    error.value = 'Please enter a valid phone number';
+    return;
+  }
+  
   error.value = '';
   isLoading.value = true;
-  if (!phoneNumber.value) {
-    error.value = 'Please enter a valid phone number.';
-    isLoading.value = false;
-    return;
-  }
-
-  if (!Capacitor.isNativePlatform()) {
-    error.value = 'Phone authentication is only available on the native app.';
-    isLoading.value = false;
-    return;
-  }
-
-  const formattedPhoneNumber = `+91${phoneNumber.value}`;
-
+  
   try {
-    await FirebaseAuthentication.signInWithPhoneNumber({ phoneNumber: formattedPhoneNumber });
+    const formattedPhone = phoneNumber.value.startsWith('+') ? phoneNumber.value : `+91${phoneNumber.value}`;
+    const auth = getAuth(); // Ensure auth is initialized
+
+    if (Capacitor.isNativePlatform()) {
+      // Native Flow
+      const result = await FirebaseAuthentication.signInWithPhoneNumber({
+        phoneNumber: formattedPhone,
+      }) as any;
+      verificationId.value = result.verificationId;
+    } else {
+      // Web Flow
+      if (!recaptchaVerifier) {
+        recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+          'size': 'invisible',
+          'callback': () => {
+            // reCAPTCHA solved, allow signInWithPhoneNumber.
+          }
+        });
+      }
+      confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, recaptchaVerifier);
+    }
+    
+    otpSent.value = true;
+    
   } catch (err: any) {
-    console.error('Capacitor Firebase Auth Error (signInWithPhoneNumber):', err);
-    error.value = `Error sending code: ${err.message || 'Failed to initiate sign-in.'}`;
+    console.error('Auth Error:', err);
+    error.value = err.message || 'Failed to send OTP. Please try again.';
+  } finally {
     isLoading.value = false;
   }
 };
 
 const verifyOtp = async () => {
+  if (!otp.value || otp.value.length < 6) {
+    error.value = 'Please enter a valid 6-digit OTP';
+    return;
+  }
+
   error.value = '';
   isLoading.value = true;
-  if (!otp.value || otp.value.length !== 6) {
-    error.value = 'Please enter the 6-digit code.';
-    isLoading.value = false;
-    return;
-  }
-  if (!verificationId.value) {
-    error.value = 'Could not verify OTP. Please try sending the code again.';
-    isLoading.value = false;
-    return;
-  }
 
   try {
     const auth = getAuth();
-    const credential = PhoneAuthProvider.credential(verificationId.value, otp.value);
-    const result = await signInWithCredential(auth, credential);
-    const user = result.user as User;
-
-    if (!user) {
-      throw new Error("Authentication failed, no user returned.");
+    
+    if (Capacitor.isNativePlatform()) {
+      if (!verificationId.value) throw new Error('Verification ID missing');
+      const credential = PhoneAuthProvider.credential(verificationId.value, otp.value);
+      await signInWithCredential(auth, credential);
+    } else {
+      if (!confirmationResult) throw new Error('No confirmation result');
+      await confirmationResult.confirm(otp.value);
     }
     
-    if (!isLogin.value && name.value && auth.currentUser) {
+    // Check if new user
+    if (!auth.currentUser) throw new Error('User not logged in after verification');
+    
+    if (!isLogin.value && name.value) {
       await updateProfile(auth.currentUser, { displayName: name.value });
+       // New User Flow: Show Role Modal
+      showRoleModal.value = true;
+    } else {
+      resetState();
+      router.push('/dashboard');
     }
 
-    resetState();
-    router.push('/dashboard');
-
   } catch (err: any) {
-    console.error('Capacitor Firebase Auth Error (verifyOtp):', err);
-    error.value = `Error verifying code: ${err.message || 'Invalid code or session.'}`;
+    console.error('Auth Verification Error:', err);
+    error.value = err.message || 'Invalid OTP. Please try again.';
   } finally {
     isLoading.value = false;
+  }
+};
+
+const handleRoleSelection = async (role: 'buyer' | 'dealer') => {
+  selectedRole.value = role;
+  showRoleModal.value = false;
+
+  if (role === 'dealer') {
+    showUploadSheet.value = true;
+  } else {
+    // Buyer Flow: Create Profile and Go
+    await createProfileAndRedirect({ role: 'buyer' });
+  }
+};
+
+const handleDocumentUpload = async (file: File) => {
+  const auth = getAuth();
+  if (!auth.currentUser) return;
+
+  try {
+    isLoading.value = true;
+    const downloadURL = await userStore.uploadUserDocument(auth.currentUser.uid, file);
+    await createProfileAndRedirect({ 
+      role: 'dealer', 
+      documents: { aadharCardUrl: downloadURL },
+      isVerified: false // Dealers need verification?
+    });
+  } catch (e: any) {
+    console.error('Upload failed', e);
+    error.value = 'Document upload failed. Please try again.';
+  } finally {
+    isLoading.value = false;
+    showUploadSheet.value = false;
+  }
+};
+
+const createProfileAndRedirect = async (profileData: any) => {
+  const auth = getAuth();
+  if (!auth.currentUser) return;
+
+  try {
+    await userStore.createUserProfile(auth.currentUser.uid, profileData);
+    resetState();
+    router.push('/dashboard');
+  } catch (e) {
+    console.error('Profile creation failed', e);
+    error.value = 'Failed to create profile.';
   }
 };
 
@@ -159,6 +253,9 @@ const resetState = () => {
   error.value = '';
   isLoading.value = false;
   verificationId.value = null;
+  showRoleModal.value = false;
+  showUploadSheet.value = false;
+  selectedRole.value = null;
 }
 
 const toggleAuthMode = () => {
@@ -168,7 +265,6 @@ const toggleAuthMode = () => {
 </script>
 
 <style scoped>
-/* Styles remain the same */
 .auth-page {
   display: flex;
   justify-content: center;

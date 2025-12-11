@@ -57,11 +57,16 @@ export declare const useUserStore: import("pinia").StoreDefinition<"user", Pick<
         readonly providerId: string;
         readonly uid: string;
     } | null>;
+    profile: import("vue").Ref<any, any>;
     loading: import("vue").Ref<boolean, boolean>;
     listenForAuthStateChanges: () => void;
     stopListeningForAuthStateChanges: () => void;
     logout: () => Promise<void>;
-}, "user" | "loading">, Pick<{
+    createUserProfile: (uid: string, profileData: any) => Promise<void>;
+    fetchUserProfile: (uid: string) => Promise<void>;
+    uploadUserDocument: (uid: string, file: File) => Promise<string>;
+    upgradeToDealer: (file: File) => Promise<void>;
+}, "user" | "profile" | "loading">, Pick<{
     user: import("vue").Ref<{
         readonly emailVerified: boolean;
         readonly isAnonymous: boolean;
@@ -119,10 +124,15 @@ export declare const useUserStore: import("pinia").StoreDefinition<"user", Pick<
         readonly providerId: string;
         readonly uid: string;
     } | null>;
+    profile: import("vue").Ref<any, any>;
     loading: import("vue").Ref<boolean, boolean>;
     listenForAuthStateChanges: () => void;
     stopListeningForAuthStateChanges: () => void;
     logout: () => Promise<void>;
+    createUserProfile: (uid: string, profileData: any) => Promise<void>;
+    fetchUserProfile: (uid: string) => Promise<void>;
+    uploadUserDocument: (uid: string, file: File) => Promise<string>;
+    upgradeToDealer: (file: File) => Promise<void>;
 }, never>, Pick<{
     user: import("vue").Ref<{
         readonly emailVerified: boolean;
@@ -181,8 +191,13 @@ export declare const useUserStore: import("pinia").StoreDefinition<"user", Pick<
         readonly providerId: string;
         readonly uid: string;
     } | null>;
+    profile: import("vue").Ref<any, any>;
     loading: import("vue").Ref<boolean, boolean>;
     listenForAuthStateChanges: () => void;
     stopListeningForAuthStateChanges: () => void;
     logout: () => Promise<void>;
-}, "listenForAuthStateChanges" | "stopListeningForAuthStateChanges" | "logout">>;
+    createUserProfile: (uid: string, profileData: any) => Promise<void>;
+    fetchUserProfile: (uid: string) => Promise<void>;
+    uploadUserDocument: (uid: string, file: File) => Promise<string>;
+    upgradeToDealer: (file: File) => Promise<void>;
+}, "listenForAuthStateChanges" | "stopListeningForAuthStateChanges" | "logout" | "createUserProfile" | "fetchUserProfile" | "uploadUserDocument" | "upgradeToDealer">>;
