@@ -49,6 +49,7 @@ export declare const usePropertyStore: import("pinia").StoreDefinition<"property
             city: string;
             pincode: string;
             size: null;
+            sizeUnit: string;
             bedrooms: null;
             bathrooms: null;
             floor: string;
@@ -96,10 +97,13 @@ export declare const usePropertyStore: import("pinia").StoreDefinition<"property
     cachedQueries: Record<string, CachedQuery>;
     cachedProperties: Record<string, DocumentData>;
     availableStates: string[];
+    propertyTypes: string[];
+    measurementUnits: string[];
     highestPrice: number;
     highestSqft: number;
     lowestSqft: number;
 }, {}, {
+    fetchPropertyOptions(): Promise<void>;
     setPropertyId(id: string): void;
     updateProperty<T extends PropertySection>(this: any, section: T, data: Partial<any>): void;
     addMediaFile(type: 'photo' | 'video', file: File): void;

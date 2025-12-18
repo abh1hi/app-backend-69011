@@ -1,77 +1,118 @@
 <template>
-  <div class="preview-container">
-    <h1 class="page-title">Preview Property Listing</h1>
+  <div class="preview-page">
+    <div class="preview-container">
+      <header class="page-header">
+        <button class="back-btn" @click="router.back()">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
+        <h1 class="page-title">Review Listing</h1>
+      </header>
 
-    <div v-if="isLoading" class="loading-overlay">
-      <div class="spinner"></div>
-      <p>Submitting your property...</p>
+      <div class="property-card-preview">
+         <!-- Hero Image Proxy -->
+         <div class="hero-preview" v-if="propertyStore.property.media.photos.length">
+            <img :src="propertyStore.property.media.photos[0]?.previewUrl" class="hero-img" alt="Property Hero">
+            <div class="hero-overlay">
+               <span class="badge">{{ propertyStore.property.basic.saleOrRent }}</span>
+            </div>
+         </div>
+         <div class="hero-placeholder" v-else>
+           <span class="material-symbols-outlined">image</span>
+           <p>No image uploaded</p>
+         </div>
+
+         <div class="content-body">
+            <div class="header-section">
+               <h2 class="property-title">{{ propertyStore.property.basic.title }}</h2>
+               <div class="location-row">
+                 <span class="material-symbols-outlined icon">location_on</span>
+                 {{ propertyStore.property.basic.location }}
+               </div>
+               <div class="price-tag">
+                 <span class="currency">₹</span>
+                 {{ propertyStore.property.pricing.price?.toLocaleString() || 0 }}
+               </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="specs-row">
+               <div class="spec-item">
+                 <span class="material-symbols-outlined">bed</span>
+                 <span>{{ propertyStore.property.basic.bedrooms }} Beds</span>
+               </div>
+               <div class="spec-item">
+                 <span class="material-symbols-outlined">bathtub</span>
+                 <span>{{ propertyStore.property.basic.bathrooms }} Baths</span>
+               </div>
+               <div class="spec-item">
+                 <span class="material-symbols-outlined">square_foot</span>
+                 <span>{{ propertyStore.property.basic.size }} {{ propertyStore.property.basic.sizeUnit }}</span>
+               </div>
+            </div>
+
+            <div class="section-block">
+               <h3>Description</h3>
+               <p class="desc-text">{{ propertyStore.property.basic.description }}</p>
+            </div>
+
+            <div class="section-block">
+               <h3>Details</h3>
+               <div class="details-grid">
+                  <div class="detail-item">
+                    <span class="label">Type</span>
+                    <span class="val">{{ propertyStore.property.basic.propertyType }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="label">Status</span>
+                    <span class="val">{{ propertyStore.property.basic.saleOrRent }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="label">Furnishing</span>
+                    <span class="val">{{ propertyStore.property.features.furnishing || '-' }}</span>
+                  </div>
+                   <div class="detail-item">
+                    <span class="label">Floor</span>
+                    <span class="val">{{ propertyStore.property.basic.floor || '-' }}</span>
+                  </div>
+               </div>
+            </div>
+
+            <div class="section-block" v-if="propertyStore.property.features.amenities.length">
+               <h3>Amenities</h3>
+               <div class="amenities-list">
+                 <span v-for="amenity in propertyStore.property.features.amenities" :key="amenity" class="amenity-chip">
+                   <span class="material-symbols-outlined">check</span> {{ amenity }}
+                 </span>
+               </div>
+            </div>
+
+             <div class="section-block">
+               <h3>Contact</h3>
+               <div class="contact-preview">
+                  <div class="agent-info">
+                     <div class="avatar-placeholder">{{ propertyStore.property.contact.name?.[0] || 'A' }}</div>
+                     <div>
+                       <div class="agent-name">{{ propertyStore.property.contact.name }}</div>
+                       <div class="agent-role">Owner/Agent</div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <div class="action-bar-sticky">
+         <div v-if="isLoading" class="loading-state">
+            <div class="spinner-sm"></div> Submitting...
+         </div>
+         <button v-else @click="submitProperty" class="submit-btn-lg">
+           Publish Listing
+           <span class="material-symbols-outlined">send</span>
+         </button>
+      </div>
+
     </div>
-
-    <div class="property-details">
-      <!-- Basic Information -->
-      <div class="detail-section">
-        <h2 class="section-title">Basic Information</h2>
-        <p><strong>Property Type:</strong> {{ propertyStore.property.basic.propertyType }}</p>
-        <p><strong>Sale or Rent:</strong> {{ propertyStore.property.basic.saleOrRent }}</p>
-        <p><strong>Title:</strong> {{ propertyStore.property.basic.title }}</p>
-        <p><strong>Description:</strong> {{ propertyStore.property.basic.description }}</p>
-        <p><strong>Location:</strong> {{ propertyStore.property.basic.location }}</p>
-        <p><strong>Size:</strong> {{ propertyStore.property.basic.size }} sq. ft.</p>
-        <p><strong>Bedrooms:</strong> {{ propertyStore.property.basic.bedrooms }}</p>
-        <p><strong>Bathrooms:</strong> {{ propertyStore.property.basic.bathrooms }}</p>
-        <p><strong>Floor:</strong> {{ propertyStore.property.basic.floor }}</p>
-        <p><strong>Age:</strong> {{ propertyStore.property.basic.age }}</p>
-      </div>
-
-      <!-- Pricing -->
-      <div class="detail-section">
-        <h2 class="section-title">Pricing</h2>
-        <p><strong>Price:</strong> ${{ propertyStore.property.pricing.price }}</p>
-        <p><strong>Maintenance:</strong> {{ propertyStore.property.pricing.maintenance }}</p>
-        <p><strong>Deposit:</strong> {{ propertyStore.property.pricing.deposit }}</p>
-        <p><strong>Payment Terms:</strong> {{ propertyStore.property.pricing.paymentTerms }}</p>
-      </div>
-
-      <!-- Features -->
-      <div class="detail-section">
-        <h2 class="section-title">Features & Amenities</h2>
-        <p><strong>Furnishing:</strong> {{ propertyStore.property.features.furnishing }}</p>
-        <p><strong>Parking:</strong> {{ propertyStore.property.features.parking }}</p>
-        <p><strong>Security:</strong> {{ propertyStore.property.features.security }}</p>
-        <p><strong>Amenities:</strong> {{ propertyStore.property.features.amenities.join(', ') }}</p>
-      </div>
-
-      <!-- Media -->
-       <div class="detail-section">
-        <h2 class="section-title">Visual Media</h2>
-        <div class="media-grid">
-          <div v-for="(photo, index) in propertyStore.property.media.photos" :key="`photo-${index}`">
-            <img :src="photo.previewUrl" class="media-item" alt="Photo" />
-          </div>
-          <div v-for="(video, index) in propertyStore.property.media.videos" :key="`video-${index}`">
-            <video :src="video.previewUrl" class="media-item" controls></video>
-          </div>
-        </div>
-      </div>
-
-      <!-- Contact -->
-      <div class="detail-section">
-        <h2 class="section-title">Contact Information</h2>
-        <p><strong>Name:</strong> {{ propertyStore.property.contact.name }}</p>
-        <p><strong>Email:</strong> {{ propertyStore.property.contact.email }}</p>
-        <p><strong>Phone:</strong> {{ propertyStore.property.contact.phone }}</p>
-         <p><strong>Contact Method:</strong> {{ propertyStore.property.contact.contactMethod }}</p>
-      </div>
-
-      <!-- Legal -->
-      <div class="detail-section">
-        <h2 class="section-title">Legal Information</h2>
-        <p><strong>Ownership:</strong> {{ propertyStore.property.legal.ownershipDocs }}</p>
-        <p><strong>Registration:</strong> {{ propertyStore.property.legal.registration }}</p>
-      </div>
-    </div>
-
-    <button @click="submitProperty" class="submit-btn" :disabled="isLoading">Finalize and Submit</button>
   </div>
 </template>
 
@@ -120,7 +161,7 @@ const submitProperty = async () => {
     // Upload photos
     const photoUrls = await Promise.all(
       propertyStore.property.media.photos.map(async (photo: MediaItem) => {
-        const photoRef = storageRef(storage, `properties/${propertyId}/${Date.now()}_${photo.file.name}`);
+        const photoRef = storageRef(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${photo.file.name}`);
         await uploadBytes(photoRef, photo.file);
         return await getDownloadURL(photoRef);
       })
@@ -129,7 +170,7 @@ const submitProperty = async () => {
     // Upload videos
     const videoUrls = await Promise.all(
       propertyStore.property.media.videos.map(async (video: MediaItem) => {
-        const videoRef = storageRef(storage, `properties/${propertyId}/${Date.now()}_${video.file.name}`);
+        const videoRef = storageRef(storage, `properties/${user.uid}/${propertyId}/${Date.now()}_${video.file.name}`);
         await uploadBytes(videoRef, video.file);
         return await getDownloadURL(videoRef);
       })
@@ -163,204 +204,134 @@ const submitProperty = async () => {
 </script>
 
 <style scoped>
-.loading-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  z-index: 3000;
-}
-
-.spinner {
-  border: 4px solid rgba(0, 122, 255, 0.1);
-  border-top: 4px solid var(--primary-blue);
-  border-radius: 50%;
-  width: 56px;
-  height: 56px;
-  animation: spin 0.8s linear infinite;
-  margin-bottom: 1.5rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-overlay p {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: 0.01em;
+.preview-page {
+  min-height: 100vh;
+  background: #f8f9fa;
+  font-family: 'Outfit', sans-serif;
+  padding-bottom: 100px;
 }
 
 .preview-container {
-  max-width: 900px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 1rem;
-  background: linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%);
-  min-height: 100vh;
-}
-
-@media (min-width: 768px) {
-  .preview-container {
-    padding: 2rem;
-  }
-}
-
-.page-title {
-  font-size: 1.875rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-bottom: 2rem;
-  text-align: center;
-  letter-spacing: -0.03em;
-  padding-top: 1rem;
-}
-
-@media (min-width: 768px) {
-  .page-title {
-    font-size: 2.5rem;
-    margin-bottom: 3rem;
-  }
-}
-
-.detail-section {
-  margin-bottom: 2rem;
   padding: 1.5rem;
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+.page-header {
+  display: flex; align-items: center; gap: 1rem; margin-bottom: 2rem;
+}
+
+.back-btn {
+  width: 40px; height: 40px; border-radius: 50%; background: white; border: 1px solid #eee;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+
+.page-title { margin: 0; font-size: 1.5rem; font-weight: 700; color: #111; }
+
+/* Card Preview */
+.property-card-preview {
+  background: white;
   border-radius: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 0.5px solid rgba(255, 255, 255, 0.8);
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
 }
 
-@media (min-width: 768px) {
-  .detail-section {
-    padding: 2rem;
-  }
-}
-
-.detail-section:last-child {
-  margin-bottom: 0;
-}
-
-.section-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--primary-blue);
-  margin-bottom: 1.5rem;
-  letter-spacing: -0.02em;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px solid rgba(0, 122, 255, 0.15);
-}
-
-@media (min-width: 768px) {
-  .section-title {
-    font-size: 1.5rem;
-  }
-}
-
-.detail-section p {
-  font-size: 1rem;
-  line-height: 1.75;
-  color: var(--text-secondary);
-  margin-bottom: 0.875rem;
-  padding: 0.75rem;
-  background: rgba(0, 122, 255, 0.02);
-  border-radius: 12px;
-}
-
-.detail-section p:last-child {
-  margin-bottom: 0;
-}
-
-.detail-section p strong {
-  color: var(--text-primary);
-  font-weight: 700;
-  display: inline-block;
-  min-width: 140px;
-  margin-right: 0.5rem;
-}
-
-.media-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-@media (min-width: 640px) {
-  .media-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.25rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .media-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-  }
-}
-
-.media-item {
+.hero-preview {
+  position: relative;
+  height: 300px;
   width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 16px;
-  border: 1.5px solid rgba(0, 122, 255, 0.15);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: all 0.2s;
 }
 
-.media-item:active {
-  transform: scale(0.98);
+.hero-img {
+  width: 100%; height: 100%; object-fit: cover;
 }
 
-.submit-btn {
-  display: block;
-  width: 100%;
-  padding: 1rem 1.5rem;
-  font-size: 1.125rem;
-  font-weight: 700;
-  text-align: center;
-  background: linear-gradient(135deg, var(--primary-blue), #0051d5);
-  color: var(--white);
-  border: none;
-  border-radius: 16px;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
-  letter-spacing: 0.02em;
-  min-height: 56px;
-  margin-top: 2rem;
+.hero-overlay {
+  position: absolute; top: 16px; left: 16px;
 }
 
-.submit-btn:active {
-  transform: scale(0.98);
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+.badge {
+  background: rgba(0,0,0,0.7); color: white; padding: 4px 12px; border-radius: 100px;
+  font-size: 0.8rem; font-weight: 600; text-transform: uppercase; backdrop-filter: blur(4px);
 }
 
-@media (min-width: 768px) {
-  .submit-btn:hover {
-    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
-    transform: translateY(-2px);
-  }
+.hero-placeholder {
+  height: 200px; background: #f0f0f0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; color: #888;
 }
 
-.submit-btn:disabled {
-  background: #e0e0e0;
-  color: #9e9e9e;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
+.content-body {
+  padding: 24px;
 }
+
+.header-section { margin-bottom: 20px; }
+.property-title { font-size: 1.5rem; font-weight: 700; color: #111; margin: 0 0 8px 0; line-height: 1.2; }
+.location-row { display: flex; align-items: center; gap: 4px; color: #666; font-size: 0.95rem; margin-bottom: 12px; }
+.location-row .icon { font-size: 18px; color: #888; }
+
+.price-tag { font-size: 1.75rem; font-weight: 700; color: #111; }
+.currency { font-size: 1rem; vertical-align: top; margin-right: 2px; }
+
+.divider { height: 1px; background: #eee; margin: 20px 0; }
+
+.specs-row {
+  display: flex; justify-content: space-between; margin-bottom: 24px;
+}
+.spec-item {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 0.9rem; color: #444; font-weight: 500;
+}
+.spec-item .material-symbols-outlined { font-size: 24px; color: #111; background: #f5f5f5; padding: 8px; border-radius: 50%; }
+
+.section-block { margin-bottom: 24px; }
+.section-block h3 { font-size: 1.1rem; font-weight: 600; margin-bottom: 12px; color: #111; }
+.desc-text { color: #555; line-height: 1.6; font-size: 0.95rem; }
+
+.details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.detail-item { background: #f9f9f9; padding: 10px 12px; border-radius: 8px; }
+.detail-item .label { display: block; font-size: 0.75rem; color: #888; margin-bottom: 2px; text-transform: uppercase; }
+.detail-item .val { font-size: 0.95rem; font-weight: 600; color: #111; }
+
+.amenities-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.amenity-chip {
+  display: flex; align-items: center; gap: 6px; padding: 6px 12px;
+  background: white; border: 1px solid #e0e0e0; border-radius: 100px; font-size: 0.85rem; color: #333;
+}
+.amenity-chip span { font-size: 16px; color: #2e7d32; }
+
+/* Contact Preview */
+.contact-preview {
+  background: #f5f5f5; padding: 16px; border-radius: 12px;
+}
+.agent-info { display: flex; align-items: center; gap: 12px; }
+.avatar-placeholder {
+  width: 48px; height: 48px; background: #ddd; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-weight: 700; color: #555;
+}
+.agent-name { font-weight: 600; color: #111; }
+.agent-role { font-size: 0.8rem; color: #666; }
+
+/* Sticky Footer */
+.action-bar-sticky {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  width: 90%; max-width: 500px;
+  z-index: 100;
+}
+.submit-btn-lg {
+  width: 100%; padding: 16px; background: #111; color: white; border: none; border-radius: 100px;
+  font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3); cursor: pointer; transition: transform 0.2s;
+}
+.submit-btn-lg:hover { transform: scale(1.02); }
+.submit-btn-lg:active { transform: scale(0.98); }
+
+.loading-state {
+  width: 100%; padding: 16px; background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+  border-radius: 100px; border: 1px solid #eee; display: flex; align-items: center; justify-content: center; gap: 10px;
+  font-weight: 600; color: #555;
+}
+.spinner-sm {
+  width: 20px; height: 20px; border: 2px solid #ddd; border-top-color: #111; border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 </style>

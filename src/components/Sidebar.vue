@@ -15,10 +15,10 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"/><path d="M4 10V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M12 10v10"/></svg>
         <span>Properties</span>
       </router-link>
-      <router-link v-if="user" to="/add-property" class="nav-item" @click="closeSidebar">
+      <button v-if="user" class="nav-item" @click="handleAddPropertyClick">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
         <span>Add Property</span>
-      </router-link>
+      </button>
       <router-link v-if="user" to="/dashboard" class="nav-item" @click="closeSidebar">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
         <span>Dashboard</span>
@@ -32,12 +32,18 @@
         <span>Logout</span>
       </button>
     </nav>
+    <IDUploadActionSheet 
+      :isVisible="showUpgradeSheet"
+      @upload-complete="handleUpgrade"
+    />
   </aside>
 </template>
 
 <script setup lang="ts">
-import { defineProps, defineEmits, computed } from 'vue';
-import { useUserStore } from '../stores/user';
+import { defineProps, defineEmits, computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useUserStore } from '../stores/userStore';
+import IDUploadActionSheet from './IDUploadActionSheet.vue';
 
 defineProps({
   isOpen: Boolean
@@ -45,7 +51,11 @@ defineProps({
 
 const emit = defineEmits(['close']);
 const userStore = useUserStore();
+const router = useRouter();
 const user = computed(() => userStore.user);
+const userProfile = computed(() => userStore.profile);
+
+const showUpgradeSheet = ref(false);
 
 const closeSidebar = () => {
   emit('close');
@@ -54,6 +64,27 @@ const closeSidebar = () => {
 const handleLogout = async () => {
   await userStore.logout();
   closeSidebar();
+};
+
+const handleAddPropertyClick = () => {
+  if (userProfile.value?.role === 'dealer') {
+    router.push('/add-property');
+    closeSidebar();
+  } else {
+    showUpgradeSheet.value = true;
+  }
+};
+
+const handleUpgrade = async (file: File) => {
+  try {
+    await userStore.upgradeToDealer(file);
+    showUpgradeSheet.value = false;
+    router.push('/add-property');
+    closeSidebar();
+  } catch (error) {
+    console.error("Upgrade failed", error);
+    alert("Failed to upgrade account.");
+  }
 };
 </script>
 
@@ -76,6 +107,8 @@ const handleLogout = async () => {
   transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   box-shadow: 2px 0 20px rgba(0, 0, 0, 0.04);
 }
+
+
 
 .sidebar.is-open {
   transform: translateX(0);
@@ -120,7 +153,7 @@ const handleLogout = async () => {
   align-items: center;
   gap: 16px;
   padding: 12px;
-  border-radius: 10px;
+  border-radius: 100px; /* MORE ROUNDED */
   text-decoration: none;
   color: var(--text-secondary);
   font-weight: 600;
@@ -173,9 +206,5 @@ const handleLogout = async () => {
   color: #C53030;
 }
 
-@media (min-width: 768px) {
-  .sidebar {
-    transform: translateX(0);
-  }
-}
+
 </style>

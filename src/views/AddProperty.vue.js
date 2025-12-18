@@ -1,4 +1,4 @@
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { usePropertyStore } from '../stores/property';
 import OptionPicker from '../components/OptionPicker.vue';
@@ -8,6 +8,9 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 const router = useRouter();
 const propertyStore = usePropertyStore();
+onMounted(() => {
+    propertyStore.fetchPropertyOptions();
+});
 const allAmenities = ['Gym', 'Pool', 'Garden', 'Lift'];
 const fileInput = ref(null);
 const mediaType = ref('photo');
@@ -24,6 +27,17 @@ const activePickerField = ref(null);
 const selectedLocation = ref(null);
 const duplicateError = ref('');
 const isCheckingDuplicates = ref(false);
+const newAmenity = ref('');
+const addCustomAmenity = () => {
+    const trimmed = newAmenity.value.trim();
+    if (trimmed && !propertyStore.property.features.amenities.includes(trimmed)) {
+        propertyStore.property.features.amenities.push(trimmed);
+    }
+    newAmenity.value = '';
+};
+const removeAmenity = (amenity) => {
+    propertyStore.property.features.amenities = propertyStore.property.features.amenities.filter(a => a !== amenity);
+};
 const basicErrors = reactive({
     propertyType: '',
     saleOrRent: '',
@@ -375,7 +389,7 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.d
 __VLS_asFunctionalElement(__VLS_intrinsicElements.label, __VLS_intrinsicElements.label)({});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.input, __VLS_intrinsicElements.input)({
     ...{ onClick: (...[$event]) => {
-            __VLS_ctx.openPicker('Property Type', ['Apartment', 'House', 'Commercial'], 'basic.propertyType');
+            __VLS_ctx.openPicker('Property Type', __VLS_ctx.propertyStore.propertyTypes, 'basic.propertyType');
         } },
     type: "text",
     value: (__VLS_ctx.propertyStore.property.basic.propertyType),
@@ -516,10 +530,27 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.d
     ...{ class: "form-group" },
 });
 __VLS_asFunctionalElement(__VLS_intrinsicElements.label, __VLS_intrinsicElements.label)({});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "size-input-group" },
+    ...{ style: {} },
+});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.input, __VLS_intrinsicElements.input)({
     type: "number",
+    placeholder: "Size",
+    ...{ style: {} },
 });
 (__VLS_ctx.propertyStore.property.basic.size);
+__VLS_asFunctionalElement(__VLS_intrinsicElements.input, __VLS_intrinsicElements.input)({
+    ...{ onClick: (...[$event]) => {
+            __VLS_ctx.openPicker('Size Unit', __VLS_ctx.propertyStore.measurementUnits, 'basic.sizeUnit');
+        } },
+    type: "text",
+    value: (__VLS_ctx.propertyStore.property.basic.sizeUnit),
+    readonly: true,
+    ...{ class: "select-input" },
+    placeholder: "Unit",
+    ...{ style: {} },
+});
 if (__VLS_ctx.basicErrors.size) {
     __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
         ...{ class: "error-message" },
@@ -722,6 +753,40 @@ for (const [amenity] of __VLS_getVForSourceType((__VLS_ctx.allAmenities))) {
         ...{ class: "checkbox-custom" },
     });
     (amenity);
+}
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "custom-amenity-input" },
+    ...{ style: {} },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.input, __VLS_intrinsicElements.input)({
+    ...{ onKeyup: (__VLS_ctx.addCustomAmenity) },
+    type: "text",
+    value: (__VLS_ctx.newAmenity),
+    placeholder: "Add custom amenity",
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.button, __VLS_intrinsicElements.button)({
+    ...{ onClick: (__VLS_ctx.addCustomAmenity) },
+    type: "button",
+    ...{ class: "add-btn" },
+    ...{ style: {} },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "selected-amenities" },
+    ...{ style: {} },
+});
+for (const [amenity] of __VLS_getVForSourceType((__VLS_ctx.propertyStore.property.features.amenities))) {
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
+        key: (amenity),
+        ...{ class: "amenity-tag" },
+        ...{ style: {} },
+    });
+    (amenity);
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
+        ...{ onClick: (...[$event]) => {
+                __VLS_ctx.removeAmenity(amenity);
+            } },
+        ...{ style: {} },
+    });
 }
 var __VLS_25;
 /** @type {[typeof FormModal, typeof FormModal, ]} */ ;
@@ -991,6 +1056,8 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.input, __VLS_intrinsicElements
 /** @type {__VLS_StyleScopedClasses['select-input-display']} */ ;
 /** @type {__VLS_StyleScopedClasses['error-message']} */ ;
 /** @type {__VLS_StyleScopedClasses['form-group']} */ ;
+/** @type {__VLS_StyleScopedClasses['size-input-group']} */ ;
+/** @type {__VLS_StyleScopedClasses['select-input']} */ ;
 /** @type {__VLS_StyleScopedClasses['error-message']} */ ;
 /** @type {__VLS_StyleScopedClasses['form-group']} */ ;
 /** @type {__VLS_StyleScopedClasses['error-message']} */ ;
@@ -1012,6 +1079,10 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.input, __VLS_intrinsicElements
 /** @type {__VLS_StyleScopedClasses['amenities-group']} */ ;
 /** @type {__VLS_StyleScopedClasses['amenity-label']} */ ;
 /** @type {__VLS_StyleScopedClasses['checkbox-custom']} */ ;
+/** @type {__VLS_StyleScopedClasses['custom-amenity-input']} */ ;
+/** @type {__VLS_StyleScopedClasses['add-btn']} */ ;
+/** @type {__VLS_StyleScopedClasses['selected-amenities']} */ ;
+/** @type {__VLS_StyleScopedClasses['amenity-tag']} */ ;
 /** @type {__VLS_StyleScopedClasses['media-upload-buttons']} */ ;
 /** @type {__VLS_StyleScopedClasses['media-btn']} */ ;
 /** @type {__VLS_StyleScopedClasses['media-btn']} */ ;
@@ -1049,6 +1120,9 @@ const __VLS_self = (await import('vue')).defineComponent({
             pickerTitle: pickerTitle,
             pickerOptions: pickerOptions,
             isCheckingDuplicates: isCheckingDuplicates,
+            newAmenity: newAmenity,
+            addCustomAmenity: addCustomAmenity,
+            removeAmenity: removeAmenity,
             basicErrors: basicErrors,
             allSectionsCompleted: allSectionsCompleted,
             openSection: openSection,

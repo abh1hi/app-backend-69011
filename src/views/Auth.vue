@@ -66,7 +66,7 @@ import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import { Capacitor, type PluginListenerHandle } from '@capacitor/core';
 import UserRoleModal from '../components/UserRoleModal.vue';
 import IDUploadActionSheet from '../components/IDUploadActionSheet.vue';
-import { useUserStore } from '../stores/user';
+import { useUserStore } from '../stores/userStore';
 
 const isLogin = ref(true);
 const name = ref('');
@@ -94,6 +94,7 @@ onMounted(async () => {
     try {
       phoneCodeSentListener = await FirebaseAuthentication.addListener('phoneCodeSent', (result: any) => {
         if (result && result.verificationId) {
+          console.log('Received verificationId from listener:', result.verificationId);
           verificationId.value = result.verificationId;
           otpSent.value = true;
           isLoading.value = false;
@@ -130,10 +131,16 @@ const sendOtp = async () => {
 
     if (Capacitor.isNativePlatform()) {
       // Native Flow
+      console.log('Starting native phone sign-in for:', formattedPhone);
       const result = await FirebaseAuthentication.signInWithPhoneNumber({
         phoneNumber: formattedPhone,
-      }) as any;
-      verificationId.value = result.verificationId;
+      });
+      console.log('Native sign-in result:', JSON.stringify(result));
+      if (result && result.verificationId) {
+        verificationId.value = result.verificationId;
+      } else {
+        console.warn('No verificationId in result, waiting for listener...');
+      }
     } else {
       // Web Flow
       if (!recaptchaVerifier) {
@@ -270,157 +277,123 @@ const toggleAuthMode = () => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, rgba(0, 122, 255, 0.05) 0%, rgba(255, 255, 255, 1) 100%);
-  padding: 1.5rem;
+  background: #fdfdfd; /* Minimalist white/off-white background */
+  padding: 1rem;
 }
 
 .auth-container {
   width: 100%;
-  max-width: 420px;
-  padding: 2rem 1.5rem;
+  max-width: 400px;
+  padding: 3rem 2rem;
   text-align: center;
-  background-color: var(--white);
-  border-radius: 32px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 122, 255, 0.1);
+  background: white;
+  border-radius: 24px;
+  /* Minimal shadow, floating effect */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04); 
 }
 
-@media (min-width: 640px) {
-  .auth-container {
-    padding: 3rem 2.5rem;
-  }
-}
-
+/* Typography */
 .auth-title {
-  font-size: 1.875rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  margin-bottom: 0.75rem;
-}
-
-@media (min-width: 640px) {
-  .auth-title {
-    font-size: 2.25rem;
-    margin-bottom: 1rem;
-  }
+  font-size: 2rem;
+  font-weight: 600;
+  color: #111;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.5px;
 }
 
 .auth-subtitle {
-  font-size: 0.9375rem;
-  color: var(--text-secondary);
-  margin-bottom: 2rem;
-  line-height: 1.6;
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 3rem;
+  line-height: 1.5;
 }
 
-@media (min-width: 640px) {
-  .auth-subtitle {
-    font-size: 1rem;
-    margin-bottom: 2.5rem;
-  }
-}
-
+/* Inputs */
 .input-group {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
 }
 
 .input-group input {
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1.5px solid rgba(0, 122, 255, 0.15);
-  background-color: rgba(0, 122, 255, 0.02);
-  font-size: 16px;
-  color: var(--text-primary);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 44px;
-}
-
-@media (min-width: 768px) {
-  .input-group input {
-    padding: 14px 16px;
-    min-height: 48px;
-    font-size: 1rem;
-    border-radius: 14px;
-  }
+  padding: 14px 0;
+  border: none;
+  border-bottom: 1px solid #ddd;
+  background: transparent;
+  font-size: 1rem;
+  color: #111;
+  transition: border-color 0.3s;
+  border-radius: 0; /* Flat underline style */
 }
 
 .input-group input:focus {
   outline: none;
-  border-color: var(--primary-blue);
-  background-color: var(--white);
-  box-shadow: 0 0 0 4px rgba(0, 122, 255, 0.1);
+  border-bottom-color: #007aff;
 }
 
 .input-group input::placeholder {
-  color: var(--text-secondary);
-  opacity: 0.6;
+  color: #999;
 }
 
+/* Error Message */
 .error-message {
   color: #ff3b30;
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
-  font-weight: 500;
+  background: rgba(255, 59, 48, 0.05);
   padding: 0.75rem;
-  background: rgba(255, 59, 48, 0.1);
   border-radius: 12px;
-  border: 1px solid rgba(255, 59, 48, 0.2);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
 }
 
+/* Buttons */
 .auth-button {
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 1rem;
   border: none;
-  border-radius: 16px;
-  background: linear-gradient(135deg, var(--primary-blue), #0051d5);
-  color: var(--white);
+  border-radius: 100px;
+  background: #007aff;
+  color: white;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
-  min-height: 52px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.2);
+}
+
+.auth-button:hover:not(:disabled) {
+  background: #006add;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 122, 255, 0.3);
 }
 
 .auth-button:disabled {
-  background: #e0e0e0;
-  color: #9e9e9e;
+  background: #ccc;
   cursor: not-allowed;
   box-shadow: none;
 }
 
-.auth-button:active {
-  transform: scale(0.98);
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
-}
-
-@media (min-width: 768px) {
-  .auth-button:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.4);
-  }
-}
-
+/* Toggle Link */
 .toggle-auth {
-  margin-top: 2rem;
-  color: var(--primary-blue);
+  margin-top: 2.5rem;
+  color: #666;
   cursor: pointer;
-  font-size: 0.9375rem;
-  font-weight: 600;
-  padding: 0.75rem;
-  border-radius: 12px;
-  transition: all 0.2s;
-  display: inline-block;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: color 0.2s;
 }
 
-.toggle-auth:active {
-  background: rgba(0, 122, 255, 0.1);
-  transform: scale(0.98);
+.toggle-auth:hover {
+  color: #007aff;
 }
 
-@media (min-width: 768px) {
-  .toggle-auth:hover {
-    background: rgba(0, 122, 255, 0.1);
+/* Responsive */
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 2rem 1.5rem;
+    box-shadow: none; /* Cleaner look on small screens */
+    background: transparent; 
   }
+  .auth-title { font-size: 1.75rem; }
 }
 </style>

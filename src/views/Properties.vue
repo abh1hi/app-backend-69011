@@ -167,131 +167,130 @@ const loadMore = async () => {
 .properties-page {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1rem;
-  background: linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%);
+  padding: 1.5rem;
+  background-color: #f8f9fa; /* Flat clean background */
   min-height: 100vh;
+  font-family: 'Outfit', sans-serif;
 }
 
 .page-header {
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
   padding-top: 1rem;
-  grid-template-areas:
-    "title"
-    "search"
-    "actions";
 }
 
 .page-title {
-  grid-area: title;
-  font-size: 1.875rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.03em;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111;
+  letter-spacing: -0.5px;
+  margin: 0;
 }
 
 .search-input-group {
     position: relative;
     display: flex;
     align-items: center;
+    max-width: 500px;
+    width: 100%;
+    margin-bottom: 0.5rem;
 }
 
 .search-icon {
     position: absolute;
     left: 1rem;
-    color: var(--text-secondary);
-    opacity: 0.6;
+    color: #888;
     width: 20px;
     height: 20px;
 }
 
 .search-input {
     width: 100%;
-    padding: 0.875rem 1rem 0.875rem 3rem;
-    border-radius: 12px;
-    border: 1px solid var(--border-color);
-    background-color: var(--input-bg);
-    color: var(--text-primary);
+    padding: 14px 1rem 14px 3rem;
+    border-radius: 100px;
+    border: 1px solid #e0e0e0;
+    background-color: white;
+    color: #111;
     font-size: 1rem;
     transition: all 0.2s ease;
     font-weight: 400;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    font-family: 'Outfit', sans-serif;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #111;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .header-actions {
-  grid-area: actions;
   display: flex;
-  gap: 1rem;
-  justify-self: start;
+  gap: 12px;
+  align-items: center;
 }
 
 .filter-button, .remove-filter-button {
-  background: linear-gradient(135deg, var(--primary-blue), #0051d5);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 12px;
-  font-size: 1rem;
+  background: white;
+  color: #111;
+  padding: 10px 20px;
+  border-radius: 100px;
+  font-size: 0.95rem;
   font-weight: 600;
-  border: none;
+  border: 1px solid #e0e0e0;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-button:hover, .remove-filter-button:hover {
+    background: #f4f4f4;
+    transform: translateY(-1px);
 }
 
 .remove-filter-button {
-  background: #e74c3c;
+  background: #fee2e2;
+  color: #ef4444;
+  border-color: transparent;
+}
+.remove-filter-button:hover {
+    background: #fecaca;
 }
 
 .properties-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.5rem;
+  gap: 24px;
 }
 
-@media (min-width: 768px) {
-  .page-header {
-    grid-template-columns: 1fr auto;
-    grid-template-areas:
-      "title actions"
-      "search search";
-    align-items: center;
-  }
-
-  .page-title {
-    font-size: 2.25rem;
-  }
-
-  .header-actions {
-    justify-self: end;
-  }
-
-  .properties-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+@media (min-width: 640px) {
+  .properties-grid { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (min-width: 1024px) {
   .page-header {
-    grid-template-columns: auto 1fr auto;
-    grid-template-areas: "title search actions";
-    gap: 2rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
   }
-
-  .page-title {
-    font-size: 2.75rem;
-  }
-
+  
+  .page-title { font-size: 2.25rem; }
+  
   .properties-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
+    gap: 32px;
   }
 }
 
 .loading-indicator, .error-state, .empty-state {
   text-align: center;
   padding: 4rem 1rem;
-  font-size: 1.125rem;
-  color: var(--text-secondary);
+  font-size: 1.1rem;
+  color: #666;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -300,11 +299,11 @@ const loadMore = async () => {
 }
 
 .spinner {
-  border: 3px solid rgba(0, 122, 255, 0.1);
-  border-top: 3px solid var(--primary-blue);
+  border: 3px solid rgba(0, 0, 0, 0.1);
+  border-top: 3px solid #111;
   border-radius: 50%;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   animation: spin 0.8s linear infinite;
   margin: 0 auto 1.5rem;
 }
@@ -316,20 +315,25 @@ const loadMore = async () => {
 
 .load-more-container {
   text-align: center;
-  margin-top: 3rem;
-  padding: 2rem 0;
+  margin-top: 4rem;
+  padding-bottom: 2rem;
 }
 
 .load-more-button {
-  background: linear-gradient(135deg, var(--primary-blue), #0051d5);
+  background: #111;
   color: white;
-  padding: 1rem 2.5rem;
-  border-radius: 16px;
+  padding: 14px 32px;
+  border-radius: 100px;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 600;
   border: none;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+  transition: all 0.2s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.load-more-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
 }
 </style>

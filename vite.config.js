@@ -10,3 +10,4 @@ export default defineConfig({
         },
     },
 });
+// Forced restart to fix HMR issue

@@ -11,6 +11,7 @@ import {
   deleteDoc,
   getDoc,
   updateDoc,
+  setDoc,
   type DocumentData,
   type QueryDocumentSnapshot,
   type QueryConstraint
@@ -18,6 +19,7 @@ import {
 import { db, storage } from '../firebase';
 import { ref as storageRef, deleteObject, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { geohashQueryBounds, distanceBetween } from 'geofire-common';
+import { seedPropertyConfig } from '../utils/seed';
 
 interface MediaItem {
   file: File;
@@ -107,7 +109,7 @@ export const usePropertyStore = defineStore('property', {
           this.measurementUnits = data.units || [];
         } else {
           // SEEDING: Create the document if it doesn't exist
-          console.log('[PropertyStore] Seeding default property options...');
+          console.warn('[PropertyStore] Property options not found in DB. Using defaults (Seeding disabled due to strict rules).');
           const defaults = {
             types: [
               'Apartment', 'House', 'Villa', 'Plot', 'Commercial', 'Agricultural Land',
@@ -119,10 +121,10 @@ export const usePropertyStore = defineStore('property', {
             ]
           };
 
-          await setDoc(configRef, defaults);
+          // await setDoc(configRef, defaults); // Disabled to prevent PERMISSION_DENIED
           this.propertyTypes = defaults.types;
           this.measurementUnits = defaults.units;
-          console.log('[PropertyStore] Default options seeded successfully.');
+          // console.log('[PropertyStore] Default options seeded successfully.');
         }
       } catch (error) {
         console.error('[PropertyStore] Error fetching property options:', error);

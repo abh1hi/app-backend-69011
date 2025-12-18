@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "build": "vite build",
     "preview": "vite preview",
     "emulators": "firebase emulators:start"
   },
@@ -16,13 +16,17 @@
     "@capacitor/cli": "^7.4.4",
     "@capacitor/core": "^7.4.4",
     "@capacitor/geolocation": "^7.1.5",
+    "@capacitor/status-bar": "^8.0.0",
+    "@fontsource/outfit": "^5.2.8",
     "firebase": "^11.10.0",
     "geofire-common": "^6.0.0",
+    "material-symbols": "^0.40.2",
     "pinia": "^2.1.7",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^20.11.19",
     "@vitejs/plugin-vue": "^5.0.4",

@@ -16,6 +16,11 @@ const config: CapacitorConfig = {
       messagingSenderId: "882368628360",
       appId: "1:882368628360:android:d51432d7a6ed557747013d", // Corrected App ID for Android
     },
+    StatusBar: {
+      backgroundColor: "#FFFFFF",
+      style: "LIGHT", // Dark icons/text
+      overlaysWebView: false, // Push webview down, don't overlay
+    },
   },
 };
 

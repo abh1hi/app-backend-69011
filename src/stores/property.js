@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { collection, query, where, orderBy, startAfter, limit, getDocs, doc, deleteDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, startAfter, limit, getDocs, doc, deleteDoc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
 import { db, storage } from '../firebase';
 import { ref as storageRef, deleteObject, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { geohashQueryBounds, distanceBetween } from 'geofire-common';
@@ -7,7 +7,7 @@ export const usePropertyStore = defineStore('property', {
     state: () => ({
         propertyId: null, // To hold the ID for the new property being created
         property: {
-            basic: { propertyType: '', saleOrRent: '', title: '', description: '', location: '', state: '', city: '', pincode: '', size: null, bedrooms: null, bathrooms: null, floor: '', age: '', lat: null, lng: null, geohash: '' },
+            basic: { propertyType: '', saleOrRent: '', title: '', description: '', location: '', state: '', city: '', pincode: '', size: null, sizeUnit: 'sq. ft.', bedrooms: null, bathrooms: null, floor: '', age: '', lat: null, lng: null, geohash: '' },
             pricing: { price: null, maintenance: '', deposit: '', paymentTerms: '' },
             features: { furnishing: '', parking: '', security: '', amenities: [] },
             media: { photos: [], videos: [] },
@@ -26,11 +26,51 @@ export const usePropertyStore = defineStore('property', {
         cachedQueries: {},
         cachedProperties: {},
         availableStates: [],
+        propertyTypes: [],
+        measurementUnits: [],
         highestPrice: 50000000,
         highestSqft: 10000,
         lowestSqft: 0
     }),
     actions: {
+        async fetchPropertyOptions() {
+            // Check if we already have the options
+            if (this.propertyTypes.length > 0 && this.measurementUnits.length > 0)
+                return;
+            const configRef = doc(db, 'app_config', 'property_options');
+            try {
+                const configSnap = await getDoc(configRef);
+                if (configSnap.exists()) {
+                    const data = configSnap.data();
+                    this.propertyTypes = data.types || [];
+                    this.measurementUnits = data.units || [];
+                }
+                else {
+                    // SEEDING: Create the document if it doesn't exist
+                    console.log('[PropertyStore] Seeding default property options...');
+                    const defaults = {
+                        types: [
+                            'Apartment', 'House', 'Villa', 'Plot', 'Commercial', 'Agricultural Land',
+                            'Farmhouse', 'PG for Boys', 'PG for Girls', 'PG Co-ed', 'Studio Apartment',
+                            'Builder Floor', 'Penthouse', 'Office Space', 'Shop/Showroom', 'Warehouse'
+                        ],
+                        units: [
+                            'sq. ft.', 'sq. yards', 'sq. meters', 'acres', 'bigha', 'hectares', 'marla', 'kanal', 'biswa', 'ground', 'cent', 'guntha'
+                        ]
+                    };
+                    await setDoc(configRef, defaults);
+                    this.propertyTypes = defaults.types;
+                    this.measurementUnits = defaults.units;
+                    console.log('[PropertyStore] Default options seeded successfully.');
+                }
+            }
+            catch (error) {
+                console.error('[PropertyStore] Error fetching property options:', error);
+                // Fallback defaults if DB fails
+                this.propertyTypes = ['Apartment', 'House', 'Commercial', 'PG', 'Agricultural'];
+                this.measurementUnits = ['sq. ft.', 'sq. yards', 'acres'];
+            }
+        },
         setPropertyId(id) {
             this.propertyId = id;
         },

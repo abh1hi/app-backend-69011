@@ -1,6 +1,8 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { App as CapacitorApp } from '@capacitor/app';
+import '@fontsource/outfit';
+import 'material-symbols';
 import './style.css';
 import './assets/main.css';
 import App from './App.vue';

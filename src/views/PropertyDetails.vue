@@ -1,152 +1,219 @@
 <template>
   <div class="property-details-page" v-if="property">
-    <!-- Hero Gallery -->
-    <div class="hero-gallery">
-      <div class="main-image-container">
-        <img :src="mainImage" alt="Main property photo" class="hero-image" />
-        <div class="image-overlay-gradient"></div>
-        <div class="price-badge">
-          <span class="price-amount">₹{{ property.pricing?.price?.toLocaleString() }}</span>
-          <span class="price-label">{{ property.basic?.saleOrRent }}</span>
-        </div>
+    <!-- Hero Section with Gallery -->
+    <div class="hero-section">
+      <div class="hero-media-wrapper">
+        <img :src="mainImage" alt="Property Image" class="hero-image" />
+        <div class="hero-overlay"></div>
+        <button class="back-btn" @click="router.back()">
+          <span class="material-symbols-outlined">arrow_back</span>
+        </button>
       </div>
-      
+
       <!-- Thumbnail Strip -->
-      <div class="thumbnail-strip" v-if="property.mediaUrls?.photos && property.mediaUrls.photos.length > 1">
-        <div class="thumbnail-scroll">
-          <div
-            v-for="(photo, index) in property.mediaUrls?.photos || []"
-            :key="index"
-            @click="mainImage = photo"
-            :class="{ active: mainImage === photo }"
-            class="thumbnail-item"
-          >
-            <img :src="photo" alt="Thumbnail" />
-          </div>
+      <div class="gallery-strip" v-if="property.mediaUrls?.photos && property.mediaUrls.photos.length > 1">
+        <div 
+          v-for="(photo, index) in property.mediaUrls.photos" 
+          :key="index"
+          @click="mainImage = photo"
+          class="gallery-thumb"
+          :class="{ active: mainImage === photo }"
+        >
+          <img :src="photo" alt="Thumbnail" />
         </div>
       </div>
     </div>
 
-    <!-- Content Container -->
-    <div class="content-wrapper">
-      <!-- Main Content -->
-      <div class="main-content">
-        <!-- Property Header -->
-        <div class="property-header-card">
-          <div class="header-content">
-            <h1 class="property-title">{{ property.basic?.title }}</h1>
-            <div class="location-row">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="location-icon">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-              <span class="location-text">{{ property.basic?.location }}</span>
-            </div>
-          </div>
-          <div class="status-badge">
-            {{ property.basic?.saleOrRent }}
-          </div>
+    <!-- Main Content Grid -->
+    <div class="content-container">
+      <div class="main-column">
+        
+        <!-- Header Info -->
+        <header class="property-header">
+           <div class="header-top">
+             <span class="status-badge">{{ property.basic?.saleOrRent }}</span>
+             <span class="type-badge">{{ property.basic?.propertyType }}</span>
+           </div>
+           
+           <h1 class="property-title">{{ property.basic?.title }}</h1>
+           
+           <div class="location-row">
+             <span class="material-symbols-outlined icon">location_on</span>
+             <span>{{ property.basic?.location }}</span>
+           </div>
+
+           <div class="price-row">
+             <span class="currency">₹</span>
+             <span class="amount">{{ property.pricing?.price?.toLocaleString() || 'N/A' }}</span>
+           </div>
+        </header>
+
+        <!-- Specs Grid -->
+        <div class="specs-grid">
+           <div class="spec-card">
+              <span class="material-symbols-outlined">bed</span>
+              <div class="spec-info">
+                <span class="value">{{ property.basic?.bedrooms || '-' }}</span>
+                <span class="label">Bedrooms</span>
+              </div>
+           </div>
+           <div class="spec-card">
+              <span class="material-symbols-outlined">bathtub</span>
+              <div class="spec-info">
+                <span class="value">{{ property.basic?.bathrooms || '-' }}</span>
+                <span class="label">Bathrooms</span>
+              </div>
+           </div>
+           <div class="spec-card">
+              <span class="material-symbols-outlined">square_foot</span>
+              <div class="spec-info">
+                <span class="value">{{ property.basic?.size || '-' }}</span>
+                <span class="label">Area ({{property.basic?.sizeUnit || 'sqft' }})</span>
+              </div>
+           </div>
+           <div class="spec-card">
+              <span class="material-symbols-outlined">category</span>
+              <div class="spec-info">
+                <span class="value">{{ property.basic?.propertyType || '-' }}</span>
+                <span class="label">Type</span>
+              </div>
+           </div>
         </div>
 
-        <!-- Quick Stats -->
-        <div class="quick-stats-card">
-          <div class="stat-item">
-            <div class="stat-icon">🛏️</div>
-            <div class="stat-content">
-              <span class="stat-value">{{ property.basic?.bedrooms || 'N/A' }}</span>
-              <span class="stat-label">Bedrooms</span>
-            </div>
+        <section class="info-section">
+          <h3>Property Overview</h3>
+          <div class="overview-grid">
+             <div class="overview-item" v-if="property.basic?.age">
+                <span class="label">Property Age</span>
+                <span class="value">{{ property.basic?.age }} Years</span>
+             </div>
+             <div class="overview-item" v-if="property.basic?.floor">
+                <span class="label">Floor</span>
+                <span class="value">{{ property.basic?.floor }}</span>
+             </div>
+             <div class="overview-item" v-if="property.features?.furnishing">
+                <span class="label">Furnishing</span>
+                <span class="value">{{ property.features?.furnishing }}</span>
+             </div>
+             <div class="overview-item" v-if="property.features?.parking">
+                <span class="label">Parking</span>
+                <span class="value">{{ property.features?.parking }}</span>
+             </div>
+              <div class="overview-item" v-if="property.basic?.city">
+                <span class="label">City</span>
+                <span class="value">{{ property.basic?.city }}</span>
+             </div>
+             <!-- Full Address if available -->
+             <div class="overview-item full-width">
+               <span class="label">Full Address</span>
+               <span class="value">{{ property.basic?.location }}</span>
+             </div>
           </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <div class="stat-icon">🛁</div>
-            <div class="stat-content">
-              <span class="stat-value">{{ property.basic?.bathrooms || 'N/A' }}</span>
-              <span class="stat-label">Bathrooms</span>
-            </div>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <div class="stat-icon">📏</div>
-            <div class="stat-content">
-              <span class="stat-value">{{ property.basic?.size || 'N/A' }}</span>
-              <span class="stat-label">Sq. Ft.</span>
-            </div>
-          </div>
-          <div class="stat-divider"></div>
-          <div class="stat-item">
-            <div class="stat-icon">🏠</div>
-            <div class="stat-content">
-              <span class="stat-value">{{ property.basic?.propertyType || 'N/A' }}</span>
-              <span class="stat-label">Type</span>
-            </div>
-          </div>
-        </div>
+        </section>
 
-        <!-- Description -->
-        <div class="info-card">
-          <h2 class="card-title">About This Property</h2>
-          <p class="description-text">{{ property.basic?.description || 'No description available.' }}</p>
-        </div>
+        <section class="info-section">
+          <h3>Description</h3>
+          <p class="description">{{ property.basic?.description || 'No description available for this property.' }}</p>
+        </section>
 
-        <!-- Amenities -->
-        <div class="info-card" v-if="property.features?.amenities?.length">
-          <h2 class="card-title">Amenities</h2>
-          <div class="amenities-list">
-            <div v-for="amenity in property.features.amenities" :key="amenity" class="amenity-item">
-              <div class="amenity-dot"></div>
-              <span>{{ amenity }}</span>
+        <section class="info-section" v-if="property.features?.amenities?.length">
+          <h3>Amenities & Features</h3>
+          <div class="amenities-grid">
+            <div v-for="amenity in property.features.amenities" :key="amenity" class="amenity-tag">
+              <span class="material-symbols-outlined">check_circle</span>
+              {{ amenity }}
             </div>
+             <div class="amenity-tag" v-if="property.features?.security">
+               <span class="material-symbols-outlined">security</span>
+               Security: {{ property.features.security }}
+             </div>
           </div>
-        </div>
+        </section>
+
+         <section class="info-section">
+          <h3>Pricing and Financials</h3>
+          <div class="overview-grid">
+             <div class="overview-item">
+                <span class="label">Price</span>
+                <span class="value highlight">₹{{ property.pricing?.price?.toLocaleString() || '-' }}</span>
+             </div>
+             <div class="overview-item" v-if="property.pricing?.maintenance">
+                <span class="label">Maintenance</span>
+                <span class="value">₹{{ property.pricing?.maintenance }}</span>
+             </div>
+             <div class="overview-item" v-if="property.pricing?.deposit">
+                <span class="label">Deposit</span>
+                <span class="value">₹{{ property.pricing?.deposit }}</span>
+             </div>
+              <div class="overview-item" v-if="property.pricing?.paymentTerms">
+                 <span class="label">Payment Terms</span>
+                 <span class="value">{{ property.pricing?.paymentTerms }}</span>
+              </div>
+          </div>
+        </section>
+
+         <section class="info-section" v-if="property.legal?.ownershipDocs || property.legal?.registration">
+          <h3>Legal Information</h3>
+          <div class="overview-grid">
+             <div class="overview-item" v-if="property.legal?.ownershipDocs">
+                <span class="label">Ownership Docs</span>
+                <span class="value">{{ property.legal?.ownershipDocs }}</span>
+             </div>
+              <div class="overview-item" v-if="property.legal?.registration">
+                <span class="label">Registration</span>
+                <span class="value">{{ property.legal?.registration }}</span>
+             </div>
+          </div>
+        </section>
+
       </div>
 
-      <!-- Contact Sidebar -->
-      <div class="contact-sidebar">
+      <!-- Sidebar -->
+      <aside class="sidebar-column">
         <div class="contact-card">
-          <h2 class="card-title">Contact Agent</h2>
-          <div class="agent-info">
-            <div class="info-row">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="info-icon">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-              <span>{{ property.contact?.name || 'N/A' }}</span>
+          <h3>Contact Agent</h3>
+          <div class="agent-profile">
+            <div class="agent-avatar">
+               <span class="material-symbols-outlined">person</span>
             </div>
-            <div class="info-row">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="info-icon">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-              </svg>
-              <span>{{ property.contact?.phone || 'N/A' }}</span>
-            </div>
-            <div class="info-row">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="info-icon">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
-              <span>{{ property.contact?.email || 'N/A' }}</span>
+            <div class="agent-details">
+              <h4>{{ property.contact?.name || 'Agent' }}</h4>
+              <p>Certified Partner</p>
             </div>
           </div>
-          <button class="contact-button">
-            <span>Request Information</span>
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
-          </button>
+          
+          <div class="contact-info-list">
+             <div class="contact-row" v-if="property.contact?.contactMethod">
+                 <span class="material-symbols-outlined">contact_phone</span>
+                 <span>Prefers: {{ property.contact.contactMethod }}</span>
+             </div>
+          </div>
+
+          <div class="contact-actions">
+            <button class="action-btn call" v-if="property.contact?.phone">
+              <span class="material-symbols-outlined">call</span>
+              {{ property.contact.phone }}
+            </button>
+            <button class="action-btn email" v-if="property.contact?.email">
+              <span class="material-symbols-outlined">mail</span>
+               Email Agent
+            </button>
+          </div>
         </div>
-      </div>
+      </aside>
     </div>
+
   </div>
+  
   <div v-else class="loading-state">
-    <div class="loading-spinner"></div>
+    <div class="spinner"></div>
     <p>Loading property details...</p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { doc, getDoc, type DocumentData } from 'firebase/firestore';
 import { db } from '../firebase';
 import { usePropertyStore } from '../stores/property';
@@ -156,26 +223,49 @@ interface Property extends DocumentData {
   basic?: {
     title?: string;
     location?: string;
+    city?: string;          // Added
+    state?: string;         // Added
+    pincode?: string;       // Added
     size?: number;
+    sizeUnit?: string;
     bedrooms?: number;
     bathrooms?: number;
     description?: string;
     propertyType?: string;
     saleOrRent?: string;
+    age?: string;           // Added
+    floor?: string;         // Added
   };
-  pricing?: { price?: number };
-  features?: { amenities?: string[] };
+  pricing?: { 
+      price?: number; 
+      maintenance?: string; // Added
+      deposit?: string;     // Added
+      paymentTerms?: string;// Added
+  };
+  features?: { 
+      amenities?: string[];
+      furnishing?: string;  // Added
+      parking?: string;     // Added
+      security?: string;    // Added
+  };
+  legal?: {                // Added
+      ownershipDocs?: string;
+      registration?: string;
+  };
   mediaUrls?: { photos?: string[] };
   contact?: {
     name?: string;
     phone?: string;
     email?: string;
+    contactMethod?: string; // Added
   };
+  createdAt?: any;          // Added
 }
 
 const property = ref<Property | null>(null);
 const mainImage = ref('');
 const route = useRoute();
+const router = useRouter();
 const propertyStore = usePropertyStore();
 
 onMounted(async () => {
@@ -185,23 +275,18 @@ onMounted(async () => {
   const cachedProperty = propertyStore.getCachedProperty(propertyId);
 
   if (cachedProperty) {
-    console.log(`[Cache] Loading property '${propertyId}' from cache.`);
     property.value = { id: propertyId, ...cachedProperty } as Property;
   } else {
-    console.log(`[API] Fetching property '${propertyId}' from Firestore.`);
     const docRef = doc(db, "properties", propertyId);
     const docSnap = await getDoc(docRef);
 
-       if (docSnap.exists()) {
+    if (docSnap.exists()) {
       const propertyData = docSnap.data();
       property.value = { id: docSnap.id, ...propertyData } as Property;
-      // Cache the newly fetched data
       propertyStore.cacheProperty(property.value);
-      console.log(`[Cache] Stored property '${propertyId}' in cache.`);
     } else {
       console.error("No such document!");
     }
-
   }
 });
 
@@ -214,506 +299,309 @@ watch(property, (newVal) => {
 
 <style scoped>
 .property-details-page {
-  background: linear-gradient(to bottom, #f5f7fa 0%, #ffffff 100%);
-  padding: 0;
   min-height: 100vh;
-  padding-bottom: calc(72px + env(safe-area-inset-bottom, 0));
+  background: #fff;
+  font-family: 'Outfit', sans-serif;
+  padding-bottom: 80px;
 }
 
-/* Hero Gallery */
-.hero-gallery {
+/* Hero */
+.hero-section {
   position: relative;
-  width: 100%;
+  background: #f5f5f5;
 }
 
-.main-image-container {
+.hero-media-wrapper {
   position: relative;
   width: 100%;
-  height: 60vh;
+  height: 50vh;
   min-height: 400px;
-  max-height: 600px;
   overflow: hidden;
-  background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
 }
 
 .hero-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-.image-overlay-gradient {
+.hero-overlay {
   position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 40%;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.4), transparent);
-  pointer-events: none;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.3) 0%, transparent 30%);
 }
 
-.price-badge {
+.back-btn {
   position: absolute;
-  bottom: 24px;
-  left: 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border-radius: 18px;
-  padding: 16px 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-  border: 0.5px solid rgba(255, 255, 255, 0.8);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 140px;
+  top: 24px; left: 24px;
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+  z-index: 10;
 }
 
-.price-amount {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--primary-blue);
-  letter-spacing: -0.5px;
-  line-height: 1;
-}
+.back-btn:active { transform: scale(0.95); }
 
-.price-label {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  opacity: 0.7;
-}
-
-.thumbnail-strip {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(30px) saturate(180%);
-  -webkit-backdrop-filter: blur(30px) saturate(180%);
-  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
-  padding: 16px 20px;
-}
-
-.thumbnail-scroll {
+/* Gallery Strip */
+.gallery-strip {
   display: flex;
   gap: 12px;
+  padding: 16px 24px;
   overflow-x: auto;
-  padding: 4px 0;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  background: white;
+  border-bottom: 1px solid #f0f0f0;
 }
 
-.thumbnail-scroll::-webkit-scrollbar {
-  display: none;
-}
-
-.thumbnail-item {
-  flex-shrink: 0;
-  width: 80px;
-  height: 60px;
-  border-radius: 12px;
+.gallery-thumb {
+  width: 80px; height: 60px;
+  border-radius: 8px;
   overflow: hidden;
+  flex-shrink: 0;
   cursor: pointer;
-  border: 2.5px solid transparent;
-  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  background: rgba(0, 0, 0, 0.05);
-  position: relative;
+  opacity: 0.6;
+  transition: all 0.2s;
 }
 
-.thumbnail-item img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+.gallery-thumb.active {
+  opacity: 1;
+  box-shadow: 0 0 0 2px #111;
 }
 
-.thumbnail-item:active {
-  transform: scale(0.95);
-}
+.gallery-thumb img { width: 100%; height: 100%; object-fit: cover; }
 
-.thumbnail-item.active {
-  border-color: var(--primary-blue);
-  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
-  transform: scale(1.05);
-}
-
-/* Content Wrapper */
-.content-wrapper {
-  max-width: 1400px;
+/* Content Layout */
+.content-container {
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 20px;
+  padding: 32px 24px;
   display: flex;
-  flex-direction: column;
-  gap: 20px;
+  gap: 48px;
 }
 
-@media (min-width: 1024px) {
-  .content-wrapper {
-    flex-direction: row;
-    gap: 24px;
-    padding: 32px 24px;
-  }
+.main-column { flex: 1; }
+.sidebar-column { width: 340px; }
+
+/* Header */
+.property-header { margin-bottom: 32px; }
+
+.header-top {
+  display: flex; gap: 8px; margin-bottom: 12px;
 }
 
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.status-badge, .type-badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
-@media (min-width: 1024px) {
-  .main-content {
-    max-width: 800px;
-  }
-}
-
-.contact-sidebar {
-  width: 100%;
-}
-
-@media (min-width: 1024px) {
-  .contact-sidebar {
-    width: 360px;
-    position: sticky;
-    top: calc(64px + env(safe-area-inset-top, 0) + 24px);
-    height: fit-content;
-  }
-}
-
-/* Property Header Card */
-.property-header-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 0.5px solid rgba(255, 255, 255, 0.8);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-}
-
-.header-content {
-  flex: 1;
-}
+.status-badge { background: #111; color: white; }
+.type-badge { background: #f0f0f0; color: #333; }
 
 .property-title {
-  font-size: 1.75rem;
-  font-weight: 800;
-  margin: 0 0 12px 0;
-  line-height: 1.3;
-  color: var(--text-primary);
-  letter-spacing: -0.5px;
-}
-
-@media (min-width: 768px) {
-  .property-title {
-    font-size: 2.25rem;
-  }
-}
-
-.location-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--text-secondary);
-  font-size: 0.9375rem;
-  font-weight: 500;
-}
-
-.location-icon {
-  width: 18px;
-  height: 18px;
-  color: var(--primary-blue);
-  flex-shrink: 0;
-}
-
-.location-text {
-  opacity: 0.8;
-}
-
-.status-badge {
-  background: var(--primary-blue);
-  color: white;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  font-size: 2rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
-}
-
-/* Quick Stats Card */
-.quick-stats-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 0.5px solid rgba(255, 255, 255, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: space-around;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 100px;
-  justify-content: center;
-}
-
-.stat-icon {
-  font-size: 24px;
-  opacity: 0.7;
-}
-
-.stat-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  letter-spacing: -0.3px;
+  color: #1a1a1a;
+  margin: 0 0 8px 0;
   line-height: 1.2;
 }
 
-.stat-label {
-  font-size: 0.75rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  opacity: 0.7;
-}
-
-.stat-divider {
-  width: 1px;
-  height: 40px;
-  background: rgba(0, 0, 0, 0.08);
-  flex-shrink: 0;
-}
-
-@media (max-width: 640px) {
-  .stat-divider {
-    display: none;
-  }
-  .quick-stats-card {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .stat-item {
-    justify-content: flex-start;
-    padding: 12px 0;
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
-  }
-  .stat-item:last-child {
-    border-bottom: none;
-  }
-}
-
-/* Info Cards */
-.info-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 0.5px solid rgba(255, 255, 255, 0.8);
-}
-
-@media (min-width: 768px) {
-  .info-card {
-    padding: 32px;
-  }
-}
-
-.card-title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  margin: 0 0 20px 0;
-  color: var(--text-primary);
-  letter-spacing: -0.3px;
-}
-
-@media (min-width: 768px) {
-  .card-title {
-    font-size: 1.375rem;
-    margin-bottom: 24px;
-  }
-}
-
-.description-text {
-  line-height: 1.75;
-  color: var(--text-secondary);
+.location-row {
+  display: flex; align-items: center; gap: 8px;
+  color: #666;
   font-size: 1rem;
-  margin: 0;
-  letter-spacing: -0.1px;
+  margin-bottom: 16px;
 }
 
-/* Amenities List */
-.amenities-list {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.location-row .icon { font-size: 20px; color: #888; }
+
+.price-row {
+  display: flex; align-items: flex-start;
+  color: #111;
 }
 
-.amenity-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
-  font-size: 0.9375rem;
-  color: var(--text-primary);
-  font-weight: 500;
+.currency { font-size: 1.25rem; font-weight: 600; margin-top: 4px; margin-right: 2px; }
+.amount { font-size: 2.5rem; font-weight: 700; letter-spacing: -1px; }
+
+/* Specs Grid */
+.specs-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 40px;
 }
 
-.amenity-item:last-child {
-  border-bottom: none;
+.spec-card {
+  background: #fafafa;
+  padding: 16px;
+  border-radius: 12px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 12px;
 }
 
-.amenity-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--primary-blue);
-  flex-shrink: 0;
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+.spec-card .material-symbols-outlined {
+  font-size: 24px; color: #444; background: white; padding: 8px; border-radius: 8px;
 }
+
+.spec-info { display: flex; flex-direction: column; }
+.spec-info .value { font-size: 1.1rem; font-weight: 700; color: #111; }
+.spec-info .label { font-size: 0.8rem; color: #666; }
+
+/* Info Sections */
+.info-section { margin-bottom: 40px; }
+.info-section h3 { font-size: 1.25rem; font-weight: 600; margin-bottom: 16px; color: #1a1a1a; }
+.description { line-height: 1.6; color: #444; font-size: 1.05rem; }
+
+.amenities-grid {
+  display: flex; flex-wrap: wrap; gap: 12px;
+}
+
+.amenity-tag {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 100px;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.amenity-tag .material-symbols-outlined { font-size: 18px; color: #22c55e; }
 
 /* Contact Card */
 .contact-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-radius: 24px;
-  padding: 24px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.08);
-  border: 0.5px solid rgba(255, 255, 255, 0.8);
-  position: sticky;
-  top: calc(64px + env(safe-area-inset-top, 0) + 24px);
-}
-
-@media (min-width: 1024px) {
-  .contact-card {
-    padding: 32px;
-  }
-}
-
-.agent-info {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.info-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  background: rgba(0, 122, 255, 0.04);
-  border-radius: 14px;
-  font-size: 0.9375rem;
-  color: var(--text-primary);
-  font-weight: 500;
-  letter-spacing: -0.1px;
-}
-
-.info-icon {
-  width: 20px;
-  height: 20px;
-  color: var(--primary-blue);
-  flex-shrink: 0;
-  opacity: 0.8;
-}
-
-.contact-button {
-  width: 100%;
-  padding: 16px 24px;
-  border: none;
-  background: var(--primary-blue);
-  color: white;
+  background: white;
+  border: 1px solid #eee;
   border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  position: sticky; top: 100px;
+}
+
+.contact-card h3 { margin: 0 0 20px 0; font-size: 1.1rem; }
+
+.agent-profile {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+}
+
+.agent-avatar {
+  width: 56px; height: 56px; background: #f0f0f0; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.agent-avatar span { font-size: 32px; color: #bbb; }
+
+.agent-details h4 { margin: 0; font-size: 1rem; font-weight: 600; }
+.agent-details p { margin: 4px 0 0; font-size: 0.85rem; color: #666; }
+
+.contact-actions { display: flex; flex-direction: column; gap: 12px; }
+
+.action-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
   font-size: 1rem;
-  font-weight: 700;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 4px 16px rgba(0, 122, 255, 0.25), 0 2px 8px rgba(0, 122, 255, 0.15);
-  letter-spacing: -0.2px;
-  min-height: 56px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.2s;
 }
 
-.contact-button:active {
-  transform: scale(0.98);
-  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.25);
+.action-btn.call { background: #111; color: white; }
+.action-btn.call:hover { background: #333; }
+
+.action-btn.email { background: white; border: 1px solid #111; color: #111; }
+.action-btn.email:hover { background: #f9f9f9; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .content-container { flex-direction: column; gap: 32px; }
+  .sidebar-column { width: 100%; }
 }
 
-@media (min-width: 768px) {
-  .contact-button:hover {
-    box-shadow: 0 8px 24px rgba(0, 122, 255, 0.35), 0 4px 12px rgba(0, 122, 255, 0.2);
-    transform: translateY(-2px);
-  }
+@media (max-width: 640px) {
+  .hero-media-wrapper { height: 40vh; }
+  .specs-grid { grid-template-columns: repeat(2, 1fr); }
+  .property-title { font-size: 1.5rem; }
+  .amount { font-size: 2rem; }
 }
 
-.contact-button svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* Loading State */
+/* Loading */
 .loading-state {
+  height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.spinner {
+  width: 40px; height: 40px; border: 3px solid #eee; border-top-color: #111;
+  border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 16px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Overview Grid */
+.overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.overview-item {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  padding: 4rem 1.5rem;
-  gap: 20px;
+  background: white;
+  border: 1px solid #f0f0f0;
+  padding: 12px 16px;
+  border-radius: 12px;
 }
 
-.loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 3px solid rgba(0, 122, 255, 0.1);
-  border-top: 3px solid var(--primary-blue);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+.overview-item.full-width {
+  grid-column: 1 / -1;
 }
 
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.overview-item .label {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 4px;
 }
 
-.loading-state p {
+.overview-item .value {
   font-size: 1rem;
-  color: var(--text-secondary);
-  font-weight: 500;
-  opacity: 0.7;
-  margin: 0;
+  font-weight: 600;
+  color: #111;
 }
 
+.overview-item .value.highlight {
+  color: #007aff;
+  font-size: 1.2rem;
+}
+
+/* Contact Info List */
+.contact-info-list {
+  margin-bottom: 20px;
+}
+
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #444;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+}
+
+.contact-row .material-symbols-outlined {
+  font-size: 18px;
+  color: #666;
+}
+
+@media (max-width: 640px) {
+  .hero-media-wrapper { height: 40vh; }
+  .specs-grid { grid-template-columns: repeat(2, 1fr); }
+  .overview-grid { grid-template-columns: 1fr; }
+  .property-title { font-size: 1.5rem; }
+  .amount { font-size: 2rem; }
+}
 </style>
