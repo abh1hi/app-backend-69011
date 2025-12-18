@@ -8,32 +8,53 @@
       <div class="hero-overlay"></div>
       
       <div class="hero-content">
-        <div class="hero-chips-container">
-            <span class="glass-chip">Residential</span>
-            <span class="glass-chip">Commercial</span>
-            <span class="glass-chip">Industrial</span>
+        <div class="hero-main-info animate-up">
+          <div class="hero-tagline">
+            <span class="tagline-dot"></span>
+            Real Estate Redefined
+          </div>
+          <h1 class="hero-display-title">Find Your Perfect<br><span>Aashiyanaa</span></h1>
+          <p class="hero-description">Discover premium residential and commercial properties verified by local experts.</p>
+        </div>
+        
+        <div class="hero-search-wrapper glass-panel animate-up-delayed">
+             <HomeSearch />
         </div>
 
-
-        <p class="hero-subtitle">Discover premium properties with verified dealers and owners.</p>
-        
-        <div class="hero-search-wrapper glass-panel">
-             <HomeSearch />
+        <div class="hero-quick-filters animate-up-delayed-more">
+            <span class="filter-chip">Residential</span>
+            <span class="filter-chip">Commercial</span>
+            <span class="filter-chip">Villas</span>
+            <span class="filter-chip">Plots</span>
         </div>
       </div>
     </div>
     
     <!-- Stats Section -->
-    <section class="section-container stats-section">
-        <div class="stat-item">
-            <h2 class="stat-number">{{ stats.activeListings }}</h2>
-            <p class="stat-label">Properties</p>
+    <section class="stats-section">
+        <div class="stat-item animate-up">
+            <span class="stat-icon material-symbols-outlined">real_estate_agent</span>
+            <div class="stat-values">
+                <h2 class="stat-number">{{ stats.activeListings }}</h2>
+                <p class="stat-label">Properties</p>
+            </div>
         </div>
-        <div class="stat-item">
-            <h2 class="stat-number">{{ stats.verifiedDealers }}</h2>
-            <p class="stat-label">Dealers</p>
+        <div class="stat-vertical-divider"></div>
+        <div class="stat-item animate-up">
+            <span class="stat-icon material-symbols-outlined">groups</span>
+            <div class="stat-values">
+                <h2 class="stat-number">{{ stats.verifiedDealers }}</h2>
+                <p class="stat-label">Verified Dealers</p>
+            </div>
         </div>
-
+        <div class="stat-vertical-divider"></div>
+        <div class="stat-item animate-up">
+            <span class="stat-icon material-symbols-outlined">location_city</span>
+            <div class="stat-values">
+                <h2 class="stat-number">{{ stats.citiesCovered }}</h2>
+                <p class="stat-label">Cities</p>
+            </div>
+        </div>
     </section>
 
     <!-- Popular Locations -->
@@ -56,37 +77,44 @@
       </div>
     </section>
 
-    <!-- Marketing / Spotlight -->
+    <!-- Spotlight Section -->
     <section class="section-container spotlight-section">
-      <div class="spotlight-content">
-         <h2 class="spotlight-title">Selling property? <br>List it for free.</h2>
-         <p class="spotlight-desc">Connect with thousands of buyers directly. No hiden charges for owners.</p>
-         <button class="primary-btn" @click="handleListProperty">List Property</button>
-      </div>
-      <div class="spotlight-image-container">
-          <div class="spotlight-image" style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2670&auto=format&fit=crop')"></div>
-          
-           <div class="floating-card glass-panel">
-              <span>Looking for dealers?</span>
-              <button class="text-link" @click="$router.push('/search')">Find Experts ➝</button>
-           </div>
+      <div class="spotlight-grid">
+        <div class="spotlight-content animate-up">
+           <div class="accent-line"></div>
+           <h2 class="spotlight-title">Selling property? <br><span class="highlight-text">List it for free.</span></h2>
+           <p class="spotlight-desc">Connect with thousands of buyers directly. No hidden charges for owners. Simple, transparent, and verified.</p>
+           <button class="primary-btn-modern" @click="handleListProperty">
+             <span>List Property</span>
+             <span class="material-symbols-outlined">add_circle</span>
+           </button>
+        </div>
+        <div class="spotlight-image-container animate-up-delayed">
+            <div class="spotlight-image" style="background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2670&auto=format&fit=crop')"></div>
+             <div class="floating-card glass-panel shadow-premium">
+                <div class="expert-avatar-group">
+                    <span class="material-symbols-outlined">support_agent</span>
+                    <div>
+                        <p class="expert-text">Need expert help?</p>
+                        <button class="text-link-modern" @click="$router.push('/search')">Find Agents ➝</button>
+                    </div>
+                </div>
+             </div>
+        </div>
       </div>
     </section>
 
-    <!-- Featured Properties -->
-    <section class="section-container featured-section">
-        <div class="section-header">
-           <h2 class="section-title">Featured Listings</h2>
-        </div>
-        <FeaturedProperties />
-    </section>
+
 
     <!-- Simple CTA -->
     <section class="cta-section">
-        <div class="cta-content glass-panel">
+        <div class="cta-card-premium glass-panel animate-up">
             <h2>Start your journey today</h2>
-            <p>Join the fastest growing real estate community.</p>
-            <button class="cta-btn" @click="$router.push('/profile')">Get Started</button>
+            <p>Join the fastest growing real estate community. It's free and always will be.</p>
+            <div class="cta-buttons">
+              <button class="cta-btn-primary" @click="$router.push('/profile')">Get Started</button>
+              <button class="cta-btn-secondary" @click="$router.push('/properties')">Browse Styles</button>
+            </div>
         </div>
     </section>
 
@@ -204,11 +232,11 @@ const currentImageIndex = ref(0);
 let intervalId: any = null;
 
 const states = [
+  { name: 'Jaipur', image: '/home-page/cities-images/jaipur-icon.jpg' },
   { name: 'Delhi', image: '/home-page/cities-images/delhi-icon.jpeg' },
+  { name: 'Gurugram', image: '/home-page/cities-images/gurugram-icon.jpg' },
+  { name: 'Ajmer', image: '/home-page/cities-images/Ajmer-icon.png' },
   { name: 'Mumbai', image: '/home-page/cities-images/mumbai-icon.jpeg' },
-  { name: 'Punjab', image: '/home-page/cities-images/punjab-icon.jpeg' },
-  { name: 'Rajasthan', image: '/home-page/cities-images/rajasthan-icon.jpeg' },
-  { name: 'Uttar Pradesh', image: '/home-page/cities-images/uttar-pardesh-icon.jpeg' },
 ];
 
 const stats = ref({
@@ -280,7 +308,7 @@ onUnmounted(() => clearInterval(intervalId));
 .section-container {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 6rem 1.5rem;
+    padding: 8rem 1.5rem; /* Increased vertical breathing room */
 }
 
 .section-header {
@@ -297,17 +325,17 @@ onUnmounted(() => clearInterval(intervalId));
     margin: 0;
 }
 
-/* Hero Section */
+/* Hero Section Refinements */
 .hero-section {
     position: relative;
-    height: 90vh;
-    min-height: 600px;
+    height: 95vh;
+    min-height: 700px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
     padding: 2rem;
-    margin-top: -80px; /* Under header */
+    margin-top: -80px; /* Seamless flow under header */
 }
 
 .hero-background-layer, .hero-image {
@@ -318,259 +346,459 @@ onUnmounted(() => clearInterval(intervalId));
     background-position: center;
     transition: opacity 1.5s ease;
 }
+
 .hero-overlay {
     position: absolute; top:0; left:0; width:100%; height:100%; z-index: 1;
-    background: linear-gradient(180deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 100%);
+    background: linear-gradient(180deg, 
+                rgba(0,0,0,0.5) 0%, 
+                rgba(0,0,0,0.3) 50%, 
+                rgba(0,0,0,0.6) 100%);
 }
 
 .hero-content {
     position: relative; z-index: 10;
-    max-width: 800px;
+    max-width: 900px;
     width: 100%;
     color: white;
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 2.5rem;
 }
 
-.hero-chips-container {
-    display: flex; gap: 1rem; margin-bottom: 2rem;
-}
-
-.glass-chip {
-    padding: 8px 20px;
+.hero-tagline {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 8px 16px;
     border-radius: 100px;
-    font-size: 0.85rem;
-    font-weight: 500;
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.3);
-    backdrop-filter: blur(4px);
-    letter-spacing: 0.5px;
-}
-
-.hero-title {
-    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-size: 0.9rem;
     font-weight: 600;
-    line-height: 1.1;
-    margin-bottom: 1rem;
-    letter-spacing: -1px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
 }
 
-.hero-subtitle {
-    font-size: clamp(1rem, 2vw, 1.25rem);
-    opacity: 0.9;
+.tagline-dot {
+    width: 8px;
+    height: 8px;
+    background: #007aff;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #007aff;
+}
+
+.hero-display-title {
+    font-size: clamp(3.5rem, 8vw, 6rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -3px;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+.hero-display-title span {
+    background: linear-gradient(to right, #ffffff, #007aff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: inline-block;
+    filter: drop-shadow(0 2px 10px rgba(0,122,255,0.3));
+}
+
+.hero-description {
+    font-size: clamp(1.1rem, 2vw, 1.3rem);
+    opacity: 0.95;
     font-weight: 300;
-    margin-bottom: 3rem;
-    max-width: 500px;
+    max-width: 600px;
+    margin: 0 auto;
+    letter-spacing: 0.2px;
 }
 
 .hero-search-wrapper {
     width: 100%;
-    max-width: 700px;
-    padding: 1rem;
-    border-radius: 24px;
+    max-width: 750px;
+    padding: 0.75rem;
+    border-radius: 32px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
 }
 
-/* Stats Section */
+.hero-quick-filters {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.filter-chip {
+    padding: 10px 24px;
+    border-radius: 100px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    backdrop-filter: blur(10px);
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.filter-chip:hover {
+    background: white;
+    color: #1a1a1a;
+    transform: translateY(-2px);
+}
+
+/* Animations */
+.animate-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+.animate-up-delayed {
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both;
+}
+.animate-up-delayed-more {
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.4s both;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Stats Section Refinements */
 .stats-section {
     display: flex;
-    justify-content: space-between;
-    padding: 4rem 1.5rem;
+    justify-content: center;
+    gap: 100px;
+    padding: 5rem 1.5rem;
     background: white;
+    border-bottom: 1px solid #f0f0f0;
 }
 
 .stat-item {
-    text-align: center;
-    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    text-align: left;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    color: #007aff;
+    opacity: 0.8;
+}
+
+.stat-vertical-divider {
+    width: 1px;
+    height: 50px;
+    background: #eee;
 }
 
 .stat-number {
-    font-size: 3.5rem;
-    font-weight: 200; /* Ultra thin */
-    color: #111;
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: #1a1a1a;
     margin: 0;
     line-height: 1;
 }
 
 .stat-label {
-    font-size: 0.9rem;
-    color: #666;
-    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: #888;
+    margin-top: 4px;
     text-transform: uppercase;
-    letter-spacing: 1.5px;
+    letter-spacing: 1px;
     font-weight: 500;
 }
 
-/* Locations */
+/* Locations Section Refinement */
+.locations-section {
+    background: #fafafa;
+}
+
 .view-all-btn {
-    background: none; border: none; font-size: 0.9rem; font-weight: 500; cursor: pointer;
-    border-bottom: 1px solid black; padding-bottom: 2px;
+    background: none; 
+    border: none; 
+    font-size: 0.95rem; 
+    font-weight: 500; 
+    cursor: pointer;
+    color: #007aff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.view-all-btn:hover {
+    gap: 12px;
 }
 
 .locations-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 2rem;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2.5rem;
 }
 
 .location-card {
     cursor: pointer;
-    group: hover;
+    position: relative;
+    border-radius: 28px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.location-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
 }
 
 .location-image-wrapper {
     width: 100%;
-    height: 320px; /* Tall cards */
-    border-radius: 24px;
+    height: 350px;
     overflow: hidden;
     position: relative;
-    margin-bottom: 1rem;
 }
 
 .location-image {
     width: 100%; height: 100%;
-    background-size: cover; background-position: center;
-    transition: transform 0.5s ease;
+    background-size: cover; 
+    background-position: center;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .location-card:hover .location-image {
-    transform: scale(1.05);
+    transform: scale(1.1);
 }
 
 .location-overlay {
-    position: absolute; bottom: 0; left: 0; width: 100%; height: 50%;
-    background: linear-gradient(to top, rgba(0,0,0,0.4), transparent);
-    opacity: 0;
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 60%;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
     transition: opacity 0.3s;
 }
 
-.location-card:hover .location-overlay { opacity: 1; }
-
-.location-info h3 {
-    font-size: 1.1rem;
-    font-weight: 500;
-    margin: 0;
+.location-info {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    color: white;
+    z-index: 2;
 }
 
-/* Spotlight Section */
-.spotlight-section {
+.location-info h3 {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.location-info p {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* Spotlight Section Refinement */
+.spotlight-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 4rem;
+    gap: 5rem;
     align-items: center;
-    padding-top: 2rem;
-    padding-bottom: 2rem;
+}
+
+.accent-line {
+    width: 60px;
+    height: 4px;
+    background: #007aff;
+    border-radius: 10px;
+    margin-bottom: 2rem;
 }
 
 .spotlight-title {
-    font-size: 3rem;
+    font-size: 3.5rem;
     line-height: 1.1;
     margin-bottom: 1.5rem;
-    letter-spacing: -1px;
+    letter-spacing: -2px;
+    font-weight: 700;
 }
 
 .spotlight-desc {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     color: #555;
     margin-bottom: 2.5rem;
-    max-width: 400px;
+    max-width: 450px;
     line-height: 1.6;
 }
 
-.primary-btn {
-    background: #111;
+.primary-btn-modern {
+    background: #1a1a1a;
     color: white;
     padding: 1rem 2.5rem;
     border-radius: 100px;
     border: none;
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: 1.05rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.primary-btn:hover { transform: translateY(-2px); }
+.primary-btn-modern:hover { 
+    transform: translateY(-4px); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
 
 .spotlight-image-container {
     position: relative;
-    height: 500px;
+    height: 550px;
     width: 100%;
 }
 
 .spotlight-image {
     width: 100%; height: 100%;
     background-size: cover; background-position: center;
-    border-radius: 32px;
+    border-radius: 40px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+}
+
+.expert-avatar-group {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
 }
 
 .floating-card {
     position: absolute;
-    bottom: 2rem; right: -2rem;
-    padding: 1.5rem 2rem;
-    border-radius: 20px;
-    display: flex; flex-direction: column; gap: 0.5rem;
-    min-width: 200px;
+    bottom: 2.5rem; right: -2rem;
+    padding: 1.25rem 1.75rem;
+    border-radius: 24px;
+    min-width: 250px;
 }
-.floating-card span { font-size: 0.9rem; color: #555; }
-.text-link {
-    background: none; border: none; color: #111; font-weight: 600; cursor: pointer;
-    padding: 0; text-align: left; font-size: 1rem;
+
+.expert-text { font-size: 0.85rem; color: #888; margin: 0; }
+.text-link-modern {
+    background: none; border: none; color: #1a1a1a; font-weight: 600; cursor: pointer;
+    padding: 0; text-align: left; font-size: 1rem; margin-top: 2px;
 }
 
 /* Featured Section */
 .featured-section {
-    background: white; /* Contrast from main */
-    padding-top: 4rem;
-    padding-bottom: 6rem;
+    background: white;
+    padding: 8rem 0;
 }
 
-/* CTA Section */
+/* Elevated CTA Section */
 .cta-section {
-    padding: 4rem 1.5rem 6rem;
+    padding: 2rem 1.5rem 8rem;
     display: flex; justify-content: center;
 }
 
-.cta-content {
+.cta-card-premium {
     width: 100%;
-    max-width: 1000px;
-    padding: 4rem 2rem;
-    border-radius: 32px;
+    max-width: 1100px;
+    padding: 6rem 3rem;
+    border-radius: 40px;
     text-align: center;
-    background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(240,240,250,0.8));
+    background: linear-gradient(135deg, #ffffff 0%, #f9f9ff 100%);
+    position: relative;
+    overflow: hidden;
 }
 
-.cta-content h2 { font-size: 2.5rem; margin-bottom: 1rem; letter-spacing: -1px; }
-.cta-content p { font-size: 1.1rem; color: #666; margin-bottom: 2.5rem; }
+.cta-card-premium::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -20%;
+    width: 100%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(0, 122, 255, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+}
 
-.cta-btn {
-    background: #007aff; /* Brand blue or similar */
+.cta-card-premium h2 { 
+    font-size: 3.5rem; 
+    margin-bottom: 1.5rem; 
+    letter-spacing: -2px; 
+    font-weight: 700;
+}
+
+.cta-card-premium p { 
+    font-size: 1.2rem; 
+    color: #666; 
+    margin-bottom: 3.5rem; 
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+}
+
+.cta-btn-primary {
+    background: #007aff;
     color: white;
-    padding: 1rem 3rem;
+    padding: 1.1rem 3.5rem;
     border-radius: 100px;
     border: none;
     font-size: 1.1rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 15px rgba(0, 122, 255, 0.3);
-    transition: transform 0.2s;
+    box-shadow: 0 10px 30px rgba(0, 122, 255, 0.3);
+    transition: all 0.3s ease;
 }
-.cta-btn:hover { transform: translateY(-2px); }
 
+.cta-btn-primary:hover { 
+    transform: translateY(-4px); 
+    box-shadow: 0 15px 40px rgba(0, 122, 255, 0.4);
+}
 
-/* Responsive */
+.cta-btn-secondary {
+    background: white;
+    color: #1a1a1a;
+    padding: 1.1rem 3.5rem;
+    border-radius: 100px;
+    border: 1px solid #ddd;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cta-btn-secondary:hover {
+    border-color: #1a1a1a;
+    background: #f9f9f9;
+}
+
+/* Utility Shadows */
+.shadow-premium {
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive Overrides */
 @media (max-width: 1024px) {
-    .spotlight-section { grid-template-columns: 1fr; text-align: center; gap: 3rem; }
-    .spotlight-content { margin: 0 auto; display: flex; flex-direction: column; align-items: center;}
+    .spotlight-grid { grid-template-columns: 1fr; text-align: center; gap: 4rem; }
+    .spotlight-content { display: flex; flex-direction: column; align-items: center; }
+    .spotlight-desc { margin-left: auto; margin-right: auto; }
+    .accent-line { margin-left: auto; margin-right: auto; }
     .floating-card { right: 2rem; }
 }
 
 @media (max-width: 768px) {
-    .hero-title { font-size: 2.5rem; }
-    .stats-section { flex-direction: column; gap: 2rem; padding: 3rem 1.5rem; }
-    .locations-grid { grid-template-columns: 1fr 1fr; }
-    .location-image-wrapper { height: 200px; }
-    .spotlight-image-container { height: 350px; }
-    .cta-content { padding: 3rem 1.5rem; }
-    .cta-content h2 { font-size: 2rem; }
+    .hero-display-title { font-size: 3.5rem; }
+    .stats-section { flex-direction: column; gap: 3rem; padding: 4rem 1.5rem; align-items: flex-start; margin-left: auto; margin-right: auto; width: fit-content;}
+    .stat-vertical-divider { display: none; }
+    .spotlight-title { font-size: 2.8rem; }
+    .cta-card-premium { padding: 4rem 1.5rem; }
+    .cta-card-premium h2 { font-size: 2.5rem; }
+    .cta-buttons { flex-direction: column; width: 100%; max-width: 300px; margin: 0 auto; }
 }
 </style>

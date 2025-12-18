@@ -1,9 +1,21 @@
-
 [
   {
-    "origin": ["https://app-backend-69011.web.app"],
-    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin"],
+    "origin": [
+      "https://app-backend-69011.web.app",
+      "https://apnaaashiyanaa.in",
+      "https://www.apnaaashiyanaa.in"
+    ],
+    "method": [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "OPTIONS"
+    ],
+    "responseHeader": [
+      "Content-Type",
+      "Access-Control-Allow-Origin"
+    ],
     "maxAgeSeconds": 3600
   }
 ]

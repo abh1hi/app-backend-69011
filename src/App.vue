@@ -1,14 +1,14 @@
 <template>
   <div id="app-container">
     <router-view v-slot="{ Component, route }">
-      <!-- Authenticated Routes -->
-      <MainLayout v-if="user && !route.meta.isPublic">
+      <!-- Main Layout for all pages except Login -->
+      <MainLayout v-if="route.name !== 'Login' && route.name !== 'Signup'">
         <Transition :name="transitionName" mode="out-in">
           <component :is="Component" :key="route.path" />
         </Transition>
       </MainLayout>
       
-      <!-- Public Routes (Login, etc.) -->
+      <!-- Bare layout for Login/Auth pages -->
       <Transition :name="transitionName" mode="out-in" v-else>
         <component :is="Component" :key="route.path" />
       </Transition>

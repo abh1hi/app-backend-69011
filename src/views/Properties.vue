@@ -1,15 +1,28 @@
 
 <template>
   <div class="properties-page">
-    <div class="page-header">
-      <h1 class="page-title">Available Properties</h1>
-      <div class="search-input-group">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="search-icon"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-        <input ref="locationInput" type="text" placeholder="Enter a city" class="search-input">
+    <div class="page-header animate-up">
+      <div class="header-left">
+        <h1 class="page-title">Explore <span class="highlight-blue">Aashiyanaa</span></h1>
+        <p class="page-subtitle">Find the best properties in your preferred cities</p>
       </div>
-      <div class="header-actions">
-        <button @click="isFilterModalVisible = true" class="filter-button">Filter</button>
-        <button v-if="filtersApplied" @click="removeFilters" class="remove-filter-button">Remove Filters</button>
+
+      <div class="header-right">
+        <div class="search-input-group glass-panel">
+          <span class="material-symbols-outlined search-icon">location_on</span>
+          <input ref="locationInput" type="text" placeholder="Search by city..." class="search-input">
+        </div>
+        
+        <div class="header-actions">
+          <button @click="isFilterModalVisible = true" class="filter-button">
+            <span class="material-symbols-outlined">tune</span>
+            <span>Filters</span>
+          </button>
+          <button v-if="filtersApplied" @click="removeFilters" class="remove-filter-button">
+            <span class="material-symbols-outlined">close</span>
+            <span>Reset</span>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -27,8 +40,9 @@
       <PropertyCard v-for="property in documents" :key="property.id" :property="property" />
     </div>
 
-    <div v-if="loading && documents.length === 0" class="loading-indicator">
-      <div class="spinner"></div>
+    <div v-if="loading && documents.length === 0" class="loading-indicator animate-up">
+      <div class="spinner-modern"></div>
+      <p>Searching for properties...</p>
     </div>
 
     <div v-if="!loading && documents.length === 0 && !error" class="empty-state">
@@ -167,8 +181,8 @@ const loadMore = async () => {
 .properties-page {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 1.5rem;
-  background-color: #f8f9fa; /* Flat clean background */
+  padding: 3rem 1.5rem 8rem;
+  background-color: #f8f9fa;
   min-height: 100vh;
   font-family: 'Outfit', sans-serif;
 }
@@ -176,135 +190,168 @@ const loadMore = async () => {
 .page-header {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2.5rem;
+  gap: 2rem;
+  margin-bottom: 4rem;
   padding-top: 1rem;
 }
 
+.highlight-blue {
+    color: #007aff;
+}
+
 .page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: #111;
-  letter-spacing: -0.5px;
+  font-size: 3rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -1.5px;
   margin: 0;
+  line-height: 1.1;
+}
+
+.page-subtitle {
+    font-size: 1.1rem;
+    color: #666;
+    margin-top: 0.5rem;
+    font-weight: 400;
+}
+
+.header-right {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 600px;
 }
 
 .search-input-group {
     position: relative;
     display: flex;
     align-items: center;
-    max-width: 500px;
     width: 100%;
-    margin-bottom: 0.5rem;
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+    border-radius: 100px;
 }
 
 .search-icon {
     position: absolute;
-    left: 1rem;
-    color: #888;
-    width: 20px;
-    height: 20px;
+    left: 1.5rem;
+    color: #007aff;
+    font-size: 1.4rem;
 }
 
 .search-input {
     width: 100%;
-    padding: 14px 1rem 14px 3rem;
+    padding: 16px 1.5rem 16px 3.5rem;
     border-radius: 100px;
-    border: 1px solid #e0e0e0;
-    background-color: white;
+    border: 1px solid transparent;
+    background: transparent;
     color: #111;
     font-size: 1rem;
-    transition: all 0.2s ease;
-    font-weight: 400;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    transition: all 0.3s ease;
+    font-weight: 500;
     font-family: 'Outfit', sans-serif;
 }
 
 .search-input:focus {
     outline: none;
-    border-color: #111;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-color: #007aff;
 }
 
 .header-actions {
   display: flex;
-  gap: 12px;
+  gap: 1rem;
   align-items: center;
 }
 
 .filter-button, .remove-filter-button {
   background: white;
   color: #111;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border-radius: 100px;
   font-size: 0.95rem;
   font-weight: 600;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #eef0f2;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 }
 
-.filter-button:hover, .remove-filter-button:hover {
-    background: #f4f4f4;
-    transform: translateY(-1px);
+.filter-button:hover {
+    background: #fdfdfd;
+    border-color: #007aff;
+    color: #007aff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 122, 255, 0.1);
 }
 
 .remove-filter-button {
-  background: #fee2e2;
-  color: #ef4444;
-  border-color: transparent;
+  background: #fff5f5;
+  color: #ff3b30;
+  border-color: rgba(255, 59, 48, 0.1);
 }
+
 .remove-filter-button:hover {
-    background: #fecaca;
+    background: #ff3b30;
+    color: white;
+    transform: translateY(-2px);
 }
 
 .properties-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 24px;
+  gap: 2rem;
 }
 
 @media (min-width: 640px) {
-  .properties-grid { grid-template-columns: repeat(2, 1fr); }
+  .properties-grid { grid-template-columns: repeat(2, 1fr); gap: 2.5rem;}
 }
 
 @media (min-width: 1024px) {
   .page-header {
     flex-direction: row;
-    align-items: center;
+    align-items: flex-end;
     justify-content: space-between;
   }
   
-  .page-title { font-size: 2.25rem; }
-  
+  .header-right {
+      align-items: flex-end;
+  }
+
   .properties-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
+    gap: 3rem;
   }
 }
 
 .loading-indicator, .error-state, .empty-state {
   text-align: center;
-  padding: 4rem 1rem;
+  padding: 6rem 1rem;
   font-size: 1.1rem;
   color: #666;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
+  min-height: 400px;
 }
 
-.spinner {
-  border: 3px solid rgba(0, 0, 0, 0.1);
-  border-top: 3px solid #111;
+.spinner-modern {
+  border: 4px solid rgba(0, 122, 255, 0.1);
+  border-top: 4px solid #007aff;
   border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  animation: spin 0.8s linear infinite;
+  width: 50px;
+  height: 50px;
+  animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   margin: 0 auto 1.5rem;
 }
 
@@ -315,25 +362,35 @@ const loadMore = async () => {
 
 .load-more-container {
   text-align: center;
-  margin-top: 4rem;
+  margin-top: 5rem;
   padding-bottom: 2rem;
 }
 
 .load-more-button {
-  background: #111;
+  background: #1a1a1a;
   color: white;
-  padding: 14px 32px;
+  padding: 16px 40px;
   border-radius: 100px;
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.05rem;
+  font-weight: 700;
   border: none;
   cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 .load-more-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+}
+
+/* Animations */
+.animate-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 </style>

@@ -28,9 +28,6 @@ export const useUserStore = defineStore('userV2', () => {
         profile.value = null;
       }
       loading.value = false;
-      if (!currentUser) {
-        router.push('/login');
-      }
     });
   };
 

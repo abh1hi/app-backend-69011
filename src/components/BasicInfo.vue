@@ -18,6 +18,10 @@
           <option>Condo</option>
           <option>Land</option>
           <option>Commercial</option>
+          <option>Boys PG</option>
+          <option>Girls PG</option>
+          <option>Hostel</option>
+          <option>Shop</option>
         </select>
       </div>
       <div class="form-group">

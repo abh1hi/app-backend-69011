@@ -11,8 +11,7 @@
       <div class="nav-pill">
         <router-link to="/" class="nav-link">Home</router-link>
         <router-link to="/search" class="nav-link">Property List</router-link>
-        <a href="#" class="nav-link">About Us</a>
-        <a href="#" class="nav-link">Contact Us</a>
+        <router-link to="/contact" class="nav-link">Contact Us</router-link>
       </div>
     </nav>
 

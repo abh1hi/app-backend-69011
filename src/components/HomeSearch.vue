@@ -22,6 +22,9 @@
           <option value="villa">Villa</option>
           <option value="plot">Plot</option>
           <option value="commercial">Commercial</option>
+          <option value="boys-pg">Boys PG</option>
+          <option value="girls-pg">Girls PG</option>
+          <option value="hostel">Hostel</option>
         </select>
         <svg class="dropdown-icon" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -386,18 +389,31 @@ onMounted(() => {
   background: none;
   border: none;
   font-size: 0.95rem;
-  font-weight: 500;
+  font-weight: 600;
   color: #111827;
   cursor: pointer;
   outline: none;
-  padding-right: 20px;
+  padding: 8px 32px 8px 12px;
+  width: 100%;
+  border-radius: 8px;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+}
+
+.category-dropdown:hover .category-select {
+    background: rgba(0, 122, 255, 0.05);
 }
 
 .dropdown-icon {
   position: absolute;
-  right: 16px;
+  right: 12px;
   pointer-events: none;
-  color: #6b7280;
+  color: #007aff;
+  transition: transform 0.2s ease;
+}
+
+.category-dropdown:focus-within .dropdown-icon {
+    transform: rotate(180deg);
 }
 
 .search-divider {
